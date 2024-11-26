@@ -1,54 +1,95 @@
-/******************************************************************************
-	* str.c: A header file that provides string manipulation function to
-	* C programs.
-	* Code samples & inspiration taken from:
-	*  - https://github.com/gingerBill/gb/blob/master/gb.h by Ginger Bill
-	*  - https://github.com/gingerBill/gb/blob/master/gb_string.h by Ginger Bill
-	*  - https://github.com/ennorehling/clibs/blob/master/strings.c by Enno Rehling
-	* -------------------------------------------------------------------------
-	* MIT License
-	*
-	* Copyright 2024 AnzenKodo
-	*
-	* Permission is hereby granted, free of charge, to any person obtaining
-	* a copy of this software and associated documentation files (the
-	* "Software"), to deal in the Software without restriction, including
-	* without limitation the rights to use, copy, modify, merge, publish,
-	* distribute, sublicense, and/or sell copies of the Software, and to
-	* permit persons to whom the Software is furnished to do so, subject to
-	* the following conditions:
-	*
-	* The above copyright notice and this permission notice shall be
-	* included in all copies or substantial portions of the Software.
-	*
-	* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-	* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-	* NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-	* LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-	* OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-	* WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-******************************************************************************/
-
 #ifndef STD_STR
 #define STD_STR
 
 // String Types
 //=============
 
-typedef struct str8 {
-	u8 *str;
-	u64 size;
-} str8;
+typedef struct Str8 {
+	U8 *str;
+	U64 len;
+} Str8;
 
-typedef struct str16 {
-	u16 *str;
-	u64 size;
-} str16;
+typedef struct Str16 {
+	U16 *str;
+	U64 len;
+} Str16;
 
 typedef struct str32 {
-	u32 *str;
-	u64 size;
+	U32 *str;
+	U64 len;
+} Str32;
+
+// C-String Measurement
+//=====================
+
+fn U64 cstr8_len(U8 *c){
+  U8 *p = c;
+  for (;*p != 0; p += 1);
+  return(p - c);
+}
+
+fn U64 cstr16_len(U16 *c){
+  U16 *p = c;
+  for (;*p != 0; p += 1);
+  return(p - c);
+}
+
+fn U64 cstr32_len(U32 *c){
+  U32 *p = c;
+  for (;*p != 0; p += 1);
+  return(p - c);
+}
+
+// String Constructors
+//====================
+
+#define str8_lit(S)  str8((U8*)(S), sizeof(S) - 1)
+#define str8_lit_comp(S) {(U8*)(S), sizeof(S) - 1,}
+#define str8_varg(S) (int)((S).len), ((S).str)
+
+fn Str8 str8(U8 *str, U64 len){
+  Str8 result = {str, len};
+  return(result);
+}
+
+fn Str8 str8_zero(void) {
+  Str8 result = {0};
+  return(result);
+}
+
+fn Str16 str16(U16 *str, U64 size){
+  Str16 result = {str, size};
+  return(result);
+}
+
+fn Str16 str16_zero(void){
+  Str16 result = {0};
+  return(result);
+}
+
+fn Str32 str32(U32 *str, U64 size){
+  Str32 result = {str, size};
+  return(result);
+}
+
+fn Str32 str32_zero(void){
+  Str32 result = {0};
+  return(result);
+}
+
+fn Stg8 str8_cstr(char *c){
+  Stg8 result = {(U8*)c, cstr8_len((U8*)c)};
+  return(result);
+}
+
+fn Str16 str16_cstr(U16 *c){
+  Str16 result = {(U16*)c, cstr16_len((U16*)c)};
+  return(result);
+}
+
+fn Str32 str32_cstr(U32 *c){
+  Str32 result = {(U32*)c, cstring32_len((U32*)c)};
+  return(result);
 }
 
 #endif // STD_STR
