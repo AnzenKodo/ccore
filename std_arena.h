@@ -65,9 +65,9 @@ void *arena_alloc(Arena *arena, size_t size) {
         current = current->next;
     }
 
-    uint8_t *data = &current->data[current->size];
-    current->size += size;
-    return data;
+   uint8_t *data = &current->data[current->size];
+   current->size += size;
+   return data;
 }
 
 void *arena_realloc(Arena *arena, void *old_ptr, size_t old_size, size_t new_size) {
@@ -108,4 +108,5 @@ void arena_free(Arena *arena) {
 
     arena->next = NULL;
 }
+
 #endif // LIBS_ARENA

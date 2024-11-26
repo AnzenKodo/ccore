@@ -151,6 +151,4 @@ void args_print_help(char *name, char *desc, char *format, char *footer) {
     puts("");
 }
 
-void args_check(void) {}
-
 #endif // LIBS_ARGS

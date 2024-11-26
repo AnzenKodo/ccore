@@ -2,6 +2,7 @@
 #include "str.h"
 #include "base.h"
 #include "args.h"
+#include "str.h"
 
 void arena_test(void) {
     Arena arena = {0};
@@ -50,7 +51,12 @@ void args_test(int argc, char **argv) {
     }
 }
 
+void str_test() {
+    printf("Hello\n");
+}
+
 int main(int argc, char *argv[]) {
-    arena_test();
-    args_test(argc, argv);
+    // arena_test();
+    // args_test(argc, argv);
+    str_test();
 }
