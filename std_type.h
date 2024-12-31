@@ -2,6 +2,7 @@
 #define STD_TYPE
 
 #define fn static
+#define global static
 
 // Types
 //======
