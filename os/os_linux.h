@@ -17,9 +17,9 @@ fn void os_exit(I32 exit_code);
 // Memory Allocation
 //==================
 
-fn void *os_alloc(U64 size) {
+fn void *os_map(U64 size) {
     void *result = mmap(0, size, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
-    if(result == MAP_FAILED) { result = 0 }
+    if(result == MAP_FAILED) { result = 0; }
     return result;
 }
 
@@ -33,7 +33,7 @@ fn void os_decommit(void *ptr, U64 size) {
     mprotect(ptr, size, PROT_NONE);
 }
 
-fn void os_free(void *ptr, U64 size) {
+fn void os_unmap(void *ptr, U64 size) {
     munmap(ptr, size);
 }
 

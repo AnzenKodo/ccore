@@ -1,8 +1,6 @@
 #ifndef STD_PRINT_H
 #define STD_PRINT_H
 
-#include <stdio.h>
-
 void print_err(char *fmt, ...) {
     va_list args;
     va_start(args, fmt);

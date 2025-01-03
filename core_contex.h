@@ -1,5 +1,5 @@
-#ifndef STD_CONTEXT
-#define STD_CONTEXT
+#ifndef CORE_CONTEXT_H
+#define CORE_CONTEXT_H
 
 // Clang OS/Arch Chacking
 //=======================
@@ -178,4 +178,4 @@
 # define LANG_C 0
 #endif
 
-#endif // STD_CONTEXT
+#endif // CORE_CONTEXT_H
