@@ -15,6 +15,10 @@
 #define global  static
 #define local   static
 
+// Singly-Linked, singly-headed lists (stacks)
+#define SLLStackPush_N(f,n,next) ((n)->next=(f), (f)=(n))
+#define SLLStackPop_N(f,next) ((f)=(f)->next)
+
 // Asserts
 //========
 
@@ -117,6 +121,8 @@ C_LINKAGE void __asan_unpoison_memory_region(void const volatile *addr, size_t s
 #define Stringify_(S) #S
 #define Stringify(S) Stringify_(S)
 
+#define ArrayCount(a) (sizeof(a) / sizeof((a)[0]))
+
 #define Glue_(A,B) A##B
 #define Glue(A,B) Glue_(A,B)
 
@@ -137,7 +143,7 @@ C_LINKAGE void __asan_unpoison_memory_region(void const volatile *addr, size_t s
 // Base Types
 //===========
 
-#define bool	_Bool
+#define Bool    _Bool
 #define true	1
 #define false	0
 

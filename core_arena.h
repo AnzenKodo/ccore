@@ -1,5 +1,5 @@
-#ifndef CORE_ARENA_H
-#define CORE_ARENA_H
+#ifndef ARENA_H
+#define ARENA_H
 
 // Types
 //======
@@ -63,6 +63,9 @@ fn void arena_pop(Arena *arena, U64 amt);
 fn Temp temp_begin(Arena *arena);
 fn void temp_end(Temp temp);
 
+// Function Implementation
+//========================
+
 //// Arena Creation/Destruction functions
 ////=====================================
 
@@ -111,6 +114,32 @@ fn void *arena_push_(Arena *arena, U64 size, U64 align)
     Arena *current = arena->current;
     U64 pos_pre = AlignPow2(current->pos, align);
     U64 pos_post = pos_pre + size;
+
+    if(current->reserve < pos_post)
+    {
+        Arena *new_block = 0;
+
+        if(new_block == 0)
+        {
+            U64 reserve_size = current->reserve_size;
+            U64 commit_size = current->commit_size;
+            if(size + ARENA_HEADER_SIZE > reserve_size)
+            {
+              reserve_size = AlignPow2(size + ARENA_HEADER_SIZE, align);
+              commit_size = AlignPow2(size + ARENA_HEADER_SIZE, align);
+            }
+            new_block = arena_alloc(
+                .reserve_size = reserve_size, .commit_size  = commit_size
+            );
+        }
+
+        new_block->base_pos = current->base_pos + current->reserve;
+        SLLStackPush_N(arena->current, new_block, prev);
+
+        current = new_block;
+        pos_pre = AlignPow2(current->pos, align);
+        pos_post = pos_pre + size;
+    }
 
     // commit new pages, if needed
     if(current->commit < pos_post)
@@ -195,4 +224,4 @@ fn void temp_end(Temp temp)
     arena_pop_to(temp.arena, temp.pos);
 }
 
-#endif // CORE_ARENA_H
+#endif // ARENA_H
