@@ -6,6 +6,7 @@
 #include "os/os.h"
 #include "core_arena.h"
 #include "gfx/gfx.h"
-
+#include "render/render.h"
+#include "core_ui.h"
 // #include "core_file.h"
 // #include "core_cmd.h"

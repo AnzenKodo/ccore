@@ -197,7 +197,6 @@ typedef struct Gfx_Handle Gfx_Handle;
 struct Gfx_Handle {
     Arena *arena;
     Gfx_Event event;
-    Gfx_Os_Handle os_handle;
     Bool win_close_status;
 };
 
@@ -227,7 +226,7 @@ fn Bool gfx_is_key_pressed(Gfx_Handle *gfx_handle, Gfx_Key key);
 #if OS_LINUX
 #   include "core/gfx/gfx_linux.h"
 #else
-#   error OS core layer not implemented for this operating system.
+#   error OS graphics layer not implemented for this operating system.
 #endif
 
 #endif // GFX_H

@@ -11,9 +11,9 @@
 // Code Keywords
 //==============
 
-#define fn      static
-#define global  static
-#define local   static
+#define fn      		static
+#define global  		static
+#define local_persist   static
 
 // Singly-Linked, singly-headed lists (stacks)
 #define SLLStackPush_N(f,n,next) ((n)->next=(f), (f)=(n))
