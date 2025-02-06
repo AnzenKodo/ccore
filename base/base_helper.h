@@ -1,21 +1,44 @@
-#ifndef STD_BASE_H
-#define STD_BASE_H
+#ifndef BASE_HELPER_H
+#define BASE_HELPER_H
 
 // C Runtime Include
 //==================
 
-#include <stdio.h>
-// #include <string.h>
 #include <stdint.h>
+#include <errno.h>
+#include <stddef.h>
 
 // Code Keywords
 //==============
 
-#define fn      		static
-#define global  		static
+#define fn          static
+#define global      static
 #define local_persist   static
 
+// Inline
+//=======
+
+#if defined(_MSC_VER)
+    #if _MSC_VER < 1300
+        #define force_inline
+    #else
+        #define force_inline __forceinline
+    #endif
+#else
+    #define force_inline __attribute__ ((__always_inline__))
+#endif
+
+// Tread static
+//=============
+
+#if COMPILER_MSVC
+#   define thread_static __declspec(thread)
+#elif COMPILER_CLANG || COMPILER_GCC
+#   define thread_static __thread
+#endif
+
 // Singly-Linked, singly-headed lists (stacks)
+
 #define SLLStackPush_N(f,n,next) ((n)->next=(f), (f)=(n))
 #define SLLStackPop_N(f,next) ((f)=(f)->next)
 
@@ -40,6 +63,27 @@
 #define NotImplemented     Assert(!"Not Implemented!")
 #define NoOp               ((void)0)
 #define StaticAssert(C, ID) global U8 Glue(ID, __LINE__)[(C)?1:-1]
+
+
+
+// Linkage Keyword Macros
+//=======================
+
+#if OS_WINDOWS
+  #define shared_function C_LINKAGE __declspec(dllexport)
+#else
+  #define shared_function C_LINKAGE
+#endif
+
+#if LANG_CPP
+  #define C_LINKAGE_BEGIN extern "C"{
+  #define C_LINKAGE_END }
+  #define C_LINKAGE extern "C"
+#else
+  #define C_LINKAGE_BEGIN
+  #define C_LINKAGE_END
+  #define C_LINKAGE
+#endif
 
 // Build
 //======
@@ -118,6 +162,12 @@ C_LINKAGE void __asan_unpoison_memory_region(void const volatile *addr, size_t s
 
 #define cast(Type) (Type)
 
+#if LANG_CPP
+#   define zero_struct {}
+#else
+#   define zero_struct {0}
+#endif
+
 #define Stringify_(S) #S
 #define Stringify(S) Stringify_(S)
 
@@ -143,150 +193,112 @@ C_LINKAGE void __asan_unpoison_memory_region(void const volatile *addr, size_t s
 // Base Types
 //===========
 
-#define Bool    _Bool
-#define true	1
-#define false	0
+#if LANG_C
+    #define Bool  _Bool
+#else
+    #define Bool  bool
+#endif
 
-typedef uint8_t		U8;
-typedef int8_t  	I8;
-typedef uint16_t 	U16;
-typedef int16_t 	I16;
-typedef uint32_t 	U32;
-typedef int32_t 	I32;
-typedef uint64_t 	U64;
-typedef int64_t 	I64;
+#define true  1
+#define false 0
+
+typedef uint8_t   U8;
+typedef int8_t    I8;
+typedef uint16_t  U16;
+typedef int16_t   I16;
+typedef uint32_t  U32;
+typedef int32_t   I32;
+typedef uint64_t  U64;
+typedef int64_t   I64;
 
 typedef float    F32;
 typedef double   F64;
+
+typedef size_t    USize;
+typedef ptrdiff_t ISize;
+
+#if defined(_WIN64)
+    typedef signed   __int64  IPtr;
+    typedef unsigned __int64 UPtr;
+#elif defined(_WIN32)
+    // NOTE(bill); To mark types changing their size, e.g. IPtr
+    #ifndef _W64
+        #if !defined(__midl) && (defined(_X86_) || defined(_M_IX86)) && _MSC_VER >= 1300
+            #define _W64 __w64
+        #else
+            #define _W64
+        #endif
+    #endif
+
+    typedef _W64   signed int  IPtr;
+    typedef _W64 unsigned int UPtr;
+#else
+    typedef uintptr_t UPtr;
+    typedef  intptr_t  IPtr;
+#endif
+
+#ifndef NULL
+    #if defined(__cplusplus)
+        #if __cplusplus >= 201103L
+            #define NULL nullptr
+        #else
+            #define NULL 0
+        #endif
+    #else
+        #define NULL ((void *)0)
+    #endif
+#endif
 
 // Time
 //=====
 
 typedef enum WeekDay {
-  WeekDay_sun,
-  WeekDay_mon,
-  WeekDay_tue,
-  WeekDay_wed,
-  WeekDay_thu,
-  WeekDay_fri,
-  WeekDay_sat,
-  WeekDay_COUNT,
+    WeekDay_sun,
+    WeekDay_mon,
+    WeekDay_tue,
+    WeekDay_wed,
+    WeekDay_thu,
+    WeekDay_fri,
+    WeekDay_sat,
+    WeekDay_COUNT,
 } WeekDay;
 
 typedef enum Month {
-  Month_jan,
-  Month_feb,
-  Month_mar,
-  Month_apr,
-  Month_may,
-  Month_jun,
-  Month_jul,
-  Month_aug,
-  Month_sep,
-  Month_oct,
-  Month_nov,
-  Month_dec,
-  Month_COUNT,
+    Month_jan,
+    Month_feb,
+    Month_mar,
+    Month_apr,
+    Month_may,
+    Month_jun,
+    Month_jul,
+    Month_aug,
+    Month_sep,
+    Month_oct,
+    Month_nov,
+    Month_dec,
+    Month_COUNT,
 } Month;
 
 typedef struct DateTime
 {
-  U16 micro_sec; // [0,999]
-  U16 msec; // [0,999]
-  U16 sec;  // [0,60]
-  U16 min;  // [0,59]
-  U16 hour; // [0,24]
-  U16 day;  // [0,30]
-  union
-  {
-    WeekDay week_day;
-    U32 wday;
-  };
-  union
-  {
-    Month month;
-    U32 mon;
-  };
-  U32 year; // 1 = 1 CE, 0 = 1 BC
+    U16 micro_sec; // [0,999]
+    U16 msec; // [0,999]
+    U16 sec;  // [0,60]
+    U16 min;  // [0,59]
+    U16 hour; // [0,24]
+    U16 day;  // [0,30]
+    union
+    {
+        WeekDay week_day;
+        U32 wday;
+    };
+    union
+    {
+        Month month;
+        U32 mon;
+    };
+    U32 year; // 1 = 1 CE, 0 = 1 BC
 } DateTime;
 
-// Memory Operation
-//=================
 
-fn void *base_memset(void *dest, U8 c, U64 n);
-
-#define MemoryZero(s,z)       base_memset((s),0,(z))
-#define MemoryZeroStruct(s)   MemoryZero((s),sizeof(*(s)))
-#define MemoryZeroArray(a)    MemoryZero((a),sizeof(a))
-#define MemoryZeroTyped(m,c)  MemoryZero((m),sizeof(*(m))*(c))
-
-fn void *base_memset(void *dest, U8 c, U64 n) {
-	U8 *s = cast(U8 *)dest;
-	U64 k;
-	U32 c32 = ((U32)-1)/255 * c;
-
-	if (dest == NULL) {
-		return NULL;
-	}
-
-	if (n == 0)
-		return dest;
-	s[0] = s[n-1] = c;
-	if (n < 3)
-		return dest;
-	s[1] = s[n-2] = c;
-	s[2] = s[n-3] = c;
-	if (n < 7)
-		return dest;
-	s[3] = s[n-4] = c;
-	if (n < 9)
-		return dest;
-
-	k = -cast(U64)s & 3;
-	s += k;
-	n -= k;
-	n &= -4;
-
-	*cast(U32 *)(s+0) = c32;
-	*cast(U32 *)(s+n-4) = c32;
-	if (n < 9) {
-		return dest;
-	}
-	*cast(U32 *)(s +  4)    = c32;
-	*cast(U32 *)(s +  8)    = c32;
-	*cast(U32 *)(s+n-12) = c32;
-	*cast(U32 *)(s+n- 8) = c32;
-	if (n < 25) {
-		return dest;
-	}
-	*cast(U32 *)(s + 12) = c32;
-	*cast(U32 *)(s + 16) = c32;
-	*cast(U32 *)(s + 20) = c32;
-	*cast(U32 *)(s + 24) = c32;
-	*cast(U32 *)(s+n-28) = c32;
-	*cast(U32 *)(s+n-24) = c32;
-	*cast(U32 *)(s+n-20) = c32;
-	*cast(U32 *)(s+n-16) = c32;
-
-	k = 24 + (cast(U64)s & 4);
-	s += k;
-	n -= k;
-
-
-	{
-		U64 c64 = (cast(U64)c32 << 32) | c32;
-		while (n > 31) {
-			*cast(U64 *)(s+0) = c64;
-			*cast(U64 *)(s+8) = c64;
-			*cast(U64 *)(s+16) = c64;
-			*cast(U64 *)(s+24) = c64;
-
-			n -= 32;
-			s += 32;
-		}
-	}
-
-	return dest;
-}
-
-#endif // CORE_BASE_H
+#endif // BASE_HELPER_H

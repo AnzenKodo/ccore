@@ -1,12 +1,12 @@
-#ifndef CORE_CONTEXT_H
-#define CORE_CONTEXT_H
+#ifndef BASE_CONTEXT_H
+#define BASE_CONTEXT_H
 
 // Clang OS/Arch Chacking
 //=======================
 
 #if defined(__clang__)
 
-# define COMPILER_CLANG 1
+#   define COMPILER_CLANG 1
 
 #   if defined(_WIN32)
 #       define OS_WINDOWS 1
@@ -75,6 +75,12 @@
 #       error Architecture not supported.
 #   endif
 
+#if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || defined(__x86_64__)
+	#ifndef CPU_X86
+		#define CPU_X86 1
+	#endif
+#endif
+
 // GCC OS/Arch Cracking
 //=====================
 
@@ -118,64 +124,64 @@
 #endif
 
 #if ARCH_ARM32 || ARCH_ARM64 || ARCH_X64 || ARCH_X86
-# define ARCH_LITTLE_ENDIAN 1
+#   define ARCH_LITTLE_ENDIAN 1
 #else
-# error Endianness of this architecture not understood by context cracker.
+#   error Endianness of this architecture not understood by context cracker.
 #endif
 
 // Language Cracking
 //==================
 
 #if defined(__cplusplus)
-# define LANG_CPP 1
+#   define LANG_CPP 1
 #else
-# define LANG_C 1
+#   define LANG_C 1
 #endif
 
 // Zero All Undefined Options
 //===========================
 
 #if !defined(ARCH_32BIT)
-# define ARCH_32BIT 0
+#   define ARCH_32BIT 0
 #endif
 #if !defined(ARCH_64BIT)
-# define ARCH_64BIT 0
+#   define ARCH_64BIT 0
 #endif
 #if !defined(ARCH_X64)
-# define ARCH_X64 0
+#   define ARCH_X64 0
 #endif
 #if !defined(ARCH_X86)
-# define ARCH_X86 0
+#   define ARCH_X86 0
 #endif
 #if !defined(ARCH_ARM64)
-# define ARCH_ARM64 0
+#   define ARCH_ARM64 0
 #endif
 #if !defined(ARCH_ARM32)
-# define ARCH_ARM32 0
+#   define ARCH_ARM32 0
 #endif
 #if !defined(COMPILER_MSVC)
-# define COMPILER_MSVC 0
+#   define COMPILER_MSVC 0
 #endif
 #if !defined(COMPILER_GCC)
-# define COMPILER_GCC 0
+#   define COMPILER_GCC 0
 #endif
 #if !defined(COMPILER_CLANG)
-# define COMPILER_CLANG 0
+#   define COMPILER_CLANG 0
 #endif
 #if !defined(OS_WINDOWS)
-# define OS_WINDOWS 0
+#   define OS_WINDOWS 0
 #endif
 #if !defined(OS_LINUX)
-# define OS_LINUX 0
+#   define OS_LINUX 0
 #endif
 #if !defined(OS_MAC)
-# define OS_MAC 0
+#   define OS_MAC 0
 #endif
 #if !defined(LANG_CPP)
-# define LANG_CPP 0
+#   define LANG_CPP 0
 #endif
 #if !defined(LANG_C)
-# define LANG_C 0
+#   define LANG_C 0
 #endif
 
-#endif // CORE_CONTEXT_H
+#endif // BASE_CONTEXT_H

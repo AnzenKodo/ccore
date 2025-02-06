@@ -4,14 +4,6 @@
 // Types
 //======
 
-typedef struct ArenaParams ArenaParams;
-struct ArenaParams
-{
-    U64 reserve_size;
-    U64 commit_size;
-    void *optional_backing_buffer;
-};
-
 typedef struct Arena Arena;
 struct Arena
 {
@@ -44,23 +36,46 @@ global U64 arena_default_commit_size  = KB(64);
 #define LINUX_PAGE_SIZE 4096
 #define ARENA_HEADER_SIZE 128
 
-#define arena_alloc(...) arena_alloc_(&(ArenaParams){.reserve_size = arena_default_reserve_size, .commit_size = arena_default_commit_size, __VA_ARGS__})
+#if LANG_C
+    typedef struct ArenaParams ArenaParams;
+    struct ArenaParams
+    {
+        U64 reserve_size;
+        U64 commit_size;
+        void *optional_backing_buffer;
+    };
+    #define arena_alloc(...) arena_alloc_(&(ArenaParams){.reserve_size = arena_default_reserve_size, .commit_size = arena_default_commit_size, __VA_ARGS__})
+#else
+    typedef struct ArenaParams ArenaParams;
+    struct ArenaParams {
+        U64 reserve_size = arena_default_reserve_size;
+        U64 commit_size = arena_default_commit_size;
+        void *optional_backing_buffer = NULL;
+    };
+    #define arena_alloc(...) [&]() { \
+        ArenaParams params = {__VA_ARGS__}; \
+        return arena_alloc_(&params); \
+    }()
+#endif
 
-#define arena_push_no_zero_aligned(a, Type, c, align) cast(Type *)arena_push_((a), sizeof(Type)*(c), (align))
-#define arena_push_aligned(a, Type, c, align) cast(Type *)MemoryZero(arena_push_no_zero_aligned(a, Type, c, align), sizeof(Type)*(c))
+#define arena_push_no_zero_aligned(a, Type, c, align) cast(Type *)arena_push_size((a), sizeof(Type)*(c), (align))
+#define arena_push_aligned(a, Type, c, align) cast(Type *)MemZero(arena_push_no_zero_aligned(a, Type, c, align), sizeof(Type)*(c))
 #define arena_push_no_zero(a, Type, c) arena_push_no_zero_aligned(a, Type, c, Max(8, AlignOf(Type)))
 #define arena_push(a, Type, c) arena_push_aligned(a, Type, c, Max(8, AlignOf(Type)))
+
+#define temp_begin(conflicts, count) temp_begin_init(tctx_get_scratch((conflicts), (count)))
 
 // Function Define
 //================
 
 fn Arena *arena_alloc_(ArenaParams *params);
 fn void arena_free(Arena *arena);
+fn void *arena_push_size(Arena *arena, U64 size, U64 align);
 fn U64 arena_pos(Arena *arena);
 fn void arena_pop_to(Arena *arena, U64 pos);
 fn void arena_clear(Arena *arena);
 fn void arena_pop(Arena *arena, U64 amt);
-fn Temp temp_begin(Arena *arena);
+fn Temp temp_begin_init(Arena *arena);
 fn void temp_end(Temp temp);
 
 // Function Implementation
@@ -79,7 +94,7 @@ fn Arena *arena_alloc_(ArenaParams *params)
     void *base = params->optional_backing_buffer;
     if(base == 0)
     {
-        base = os_map(reserve_size);
+        base = os_alloc(reserve_size);
         os_commit(base, commit_size);
     }
 
@@ -102,14 +117,14 @@ fn void arena_free(Arena *arena)
     for(Arena *n = arena->current, *prev = 0; n != 0; n = prev)
     {
         prev = n->prev;
-        os_unmap(n, n->reserve);
+        os_free(n, n->reserve);
     }
 }
 
 //// Arena Push/Pop functions
 ////=========================
 
-fn void *arena_push_(Arena *arena, U64 size, U64 align)
+fn void *arena_push_size(Arena *arena, U64 size, U64 align)
 {
     Arena *current = arena->current;
     U64 pos_pre = AlignPow2(current->pos, align);
@@ -180,7 +195,7 @@ fn void arena_pop_to(Arena *arena, U64 pos)
     for(Arena *prev = 0; current->base_pos >= big_pos; current = prev)
     {
         prev = current->prev;
-        os_unmap(current, current->reserve);
+        os_free(current, current->reserve);
     }
 
     arena->current = current;
@@ -212,7 +227,7 @@ fn void arena_pop(Arena *arena, U64 amt)
 //// Temporary Arena
 ////================
 
-fn Temp temp_begin(Arena *arena)
+fn Temp temp_begin_init(Arena *arena)
 {
     U64 pos = arena_pos(arena);
     Temp temp = {arena, pos};

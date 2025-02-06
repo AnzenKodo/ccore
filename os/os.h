@@ -1,10 +1,7 @@
 #ifndef OS_H
 #define OS_H
 
-#if OS_LINUX
-#   include "core/os/os_linux.h"
-#else
-#   error OS layer not implemented for this operating system.
-#endif
+#include "ccore/os/os_core/os_core.h"
+#include "ccore/os/os_wl/os_wl.h"
 
 #endif // OS_H
