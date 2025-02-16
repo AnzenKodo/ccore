@@ -1,40 +1,5 @@
-#ifndef THREAD_CONTEXT_H
-#define THREAD_CONTEXT_H
-
-// Types
-//======
-
-typedef struct TCTX TCTX;
-struct TCTX
-{
-    Arena *arenas[2];
-
-    U8 thread_name[32];
-    U64 thread_name_size;
-
-    char *file_name;
-    U64 line_number;
-};
-
 // Thread Context Functions
-//=========================
-
-fn void      tctx_init_and_equip(TCTX *tctx);
-fn void      tctx_release(void);
-fn TCTX*     tctx_get_equipped(void);
-
-fn Arena*    tctx_get_scratch(Arena **conflicts, U64 countt);
-
-fn void      tctx_set_thread_name(Str8 name);
-fn Str8      tctx_get_thread_name(void);
-
-fn void      tctx_write_srcloc(char *file_name, U64 line_number);
-fn void      tctx_read_srcloc(char **file_name, U64 *line_number);
-
-// Macros
-//=======
-
-#define tctx_write_this_srcloc() tctx_write_srcloc(__FILE__, __LINE__)
+//====================================================================
 
 C_LINKAGE thread_static TCTX* tctx_thread_local;
 #if !BUILD_SUPPLEMENTARY_UNIT
@@ -42,7 +7,7 @@ thread_static TCTX* tctx_thread_local = 0;
 #endif
 
 fn void tctx_init_and_equip(TCTX *tctx){
-    MemZeroStruct(tctx);
+    MemoryZeroStruct(tctx);
     Arena **arena_ptr = tctx->arenas;
     for (U64 i = 0; i < ArrayCount(tctx->arenas); i += 1, arena_ptr += 1){
         *arena_ptr = arena_alloc();
@@ -88,7 +53,7 @@ fn Arena* tctx_get_scratch(Arena **conflicts, U64 count){
 fn void tctx_set_thread_name(Str8 string){
     TCTX *tctx = tctx_get_equipped();
     U64 size = ClampTop(string.size, sizeof(tctx->thread_name));
-    MemMove(tctx->thread_name, string.str, size);
+    MemoryMove(tctx->thread_name, string.str, size);
     tctx->thread_name_size = size;
 }
 
@@ -109,5 +74,3 @@ fn void tctx_read_srcloc(char **file_name, U64 *line_number){
     *file_name = tctx->file_name;
     *line_number = tctx->line_number;
 }
-
-#endif // THREAD_CONTEXT_H

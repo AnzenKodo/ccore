@@ -1,88 +1,5 @@
-#ifndef ARENA_H
-#define ARENA_H
-
-// Types
-//======
-
-typedef struct Arena Arena;
-struct Arena
-{
-    Arena *prev;    // previous arena in chain
-    Arena *current; // current arena in chain
-    U64 commit_size;
-    U64 reserve_size;
-    U64 base_pos;
-    U64 pos;
-    U64 commit;
-    U64 reserve;
-};
-
-typedef struct Temp Temp;
-struct Temp
-{
-    Arena *arena;
-    U64 pos;
-};
-
-// Defaults
-//=========
-
-global U64 arena_default_reserve_size = MB(64);
-global U64 arena_default_commit_size  = KB(64);
-
-// Macros
-//=======
-
-#define LINUX_PAGE_SIZE 4096
-#define ARENA_HEADER_SIZE 128
-
-#if LANG_C
-    typedef struct ArenaParams ArenaParams;
-    struct ArenaParams
-    {
-        U64 reserve_size;
-        U64 commit_size;
-        void *optional_backing_buffer;
-    };
-    #define arena_alloc(...) arena_alloc_(&(ArenaParams){.reserve_size = arena_default_reserve_size, .commit_size = arena_default_commit_size, __VA_ARGS__})
-#else
-    typedef struct ArenaParams ArenaParams;
-    struct ArenaParams {
-        U64 reserve_size = arena_default_reserve_size;
-        U64 commit_size = arena_default_commit_size;
-        void *optional_backing_buffer = NULL;
-    };
-    #define arena_alloc(...) [&]() { \
-        ArenaParams params = {__VA_ARGS__}; \
-        return arena_alloc_(&params); \
-    }()
-#endif
-
-#define arena_push_no_zero_aligned(a, Type, c, align) cast(Type *)arena_push_size((a), sizeof(Type)*(c), (align))
-#define arena_push_aligned(a, Type, c, align) cast(Type *)MemZero(arena_push_no_zero_aligned(a, Type, c, align), sizeof(Type)*(c))
-#define arena_push_no_zero(a, Type, c) arena_push_no_zero_aligned(a, Type, c, Max(8, AlignOf(Type)))
-#define arena_push(a, Type, c) arena_push_aligned(a, Type, c, Max(8, AlignOf(Type)))
-
-#define temp_begin(conflicts, count) temp_begin_init(tctx_get_scratch((conflicts), (count)))
-
-// Function Define
-//================
-
-fn Arena *arena_alloc_(ArenaParams *params);
-fn void arena_free(Arena *arena);
-fn void *arena_push_size(Arena *arena, U64 size, U64 align);
-fn U64 arena_pos(Arena *arena);
-fn void arena_pop_to(Arena *arena, U64 pos);
-fn void arena_clear(Arena *arena);
-fn void arena_pop(Arena *arena, U64 amt);
-fn Temp temp_begin_init(Arena *arena);
-fn void temp_end(Temp temp);
-
-// Function Implementation
-//========================
-
-//// Arena Creation/Destruction functions
-////=====================================
+// Arena Creation/Destruction functions
+//====================================================================
 
 fn Arena *arena_alloc_(ArenaParams *params)
 {
@@ -94,8 +11,8 @@ fn Arena *arena_alloc_(ArenaParams *params)
     void *base = params->optional_backing_buffer;
     if(base == 0)
     {
-        base = os_alloc(reserve_size);
-        os_commit(base, commit_size);
+        base = os_memory_alloc(reserve_size);
+        os_memory_commit(base, commit_size);
     }
 
     Arena *arena = (Arena *)base;
@@ -117,12 +34,12 @@ fn void arena_free(Arena *arena)
     for(Arena *n = arena->current, *prev = 0; n != 0; n = prev)
     {
         prev = n->prev;
-        os_free(n, n->reserve);
+        os_memory_free(n, n->reserve);
     }
 }
 
-//// Arena Push/Pop functions
-////=========================
+// Arena Push/Pop functions
+//====================================================================
 
 fn void *arena_push_size(Arena *arena, U64 size, U64 align)
 {
@@ -164,7 +81,7 @@ fn void *arena_push_size(Arena *arena, U64 size, U64 align)
         U64 commit_post_clamped = ClampTop(commit_post_aligned, current->reserve);
         U64 commit_size = commit_post_clamped - current->commit;
         U8 *commit_ptr = (U8 *)current + current->commit;
-        os_commit(commit_ptr, commit_size);
+        os_memory_commit(commit_ptr, commit_size);
         current->commit = commit_post_clamped;
     }
 
@@ -195,7 +112,7 @@ fn void arena_pop_to(Arena *arena, U64 pos)
     for(Arena *prev = 0; current->base_pos >= big_pos; current = prev)
     {
         prev = current->prev;
-        os_free(current, current->reserve);
+        os_memory_free(current, current->reserve);
     }
 
     arena->current = current;
@@ -205,8 +122,8 @@ fn void arena_pop_to(Arena *arena, U64 pos)
     current->pos = new_pos;
 }
 
-//// Arena Push/Pop helpers
-////=======================
+// Arena Push/Pop helpers
+//====================================================================
 
 fn void arena_clear(Arena *arena)
 {
@@ -224,8 +141,8 @@ fn void arena_pop(Arena *arena, U64 amt)
     arena_pop_to(arena, pos_new);
 }
 
-//// Temporary Arena
-////================
+// Temporary Arena
+//====================================================================
 
 fn Temp temp_begin_init(Arena *arena)
 {
@@ -238,5 +155,3 @@ fn void temp_end(Temp temp)
 {
     arena_pop_to(temp.arena, temp.pos);
 }
-
-#endif // ARENA_H

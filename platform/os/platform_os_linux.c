@@ -7,44 +7,34 @@
 #include <fcntl.h>
 
 // Memory Allocation
-//==================
+//====================================================================
 
-fn void *os_alloc(U64 size)
+fn void *os_memory_alloc(U64 size)
 {
     void *result = mmap(0, size, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
     if(result == MAP_FAILED) { result = 0; }
     return result;
 }
 
-fn I32 os_commit(void *ptr, U64 size)
+fn I32 os_memory_commit(void *ptr, U64 size)
 {
     mprotect(ptr, size, PROT_READ|PROT_WRITE);
     return 1;
 }
 
-fn void os_decommit(void *ptr, U64 size)
+fn void os_memory_decommit(void *ptr, U64 size)
 {
     madvise(ptr, size, MADV_DONTNEED);
     mprotect(ptr, size, PROT_NONE);
 }
 
-fn void os_free(void *ptr, U64 size)
+fn void os_memory_free(void *ptr, U64 size)
 {
     munmap(ptr, size);
 }
 
-fn void os_write(I32 fd, void *data, U64 size)
-{
-    write(fd, data, size);
-}
-
-fn void os_write_str8(I32 fd, Str8 str)
-{
-    os_write(fd, str.str, str.size+1);
-}
-
 // File System
-//============
+//====================================================================
 
 fn Os_File os_file_open(Str8 path, Os_AccessFlags flags)
 {
@@ -126,7 +116,7 @@ fn U64 os_file_write(Os_File fd, Rng1U64 rng, void *data)
     return total_num_bytes_written;
 }
 
-fn Bool os_mkdir(const char *path)
+fn Bool os_dir_make(const char *path)
 {
     I32 result = mkdir(path, 0700);
 
@@ -149,11 +139,25 @@ fn Bool os_exist(const char *path)
 }
 
 // Exit
-//=====
+//====================================================================
 
 fn void os_exit(I32 exit_code)
 {
     _exit(exit_code);
 }
+
+// Write
+//====================================================================
+
+fn void os_write(I32 fd, void *data, U64 size)
+{
+    write(fd, data, size);
+}
+
+fn void os_write_str8(I32 fd, Str8 str)
+{
+    os_write(fd, str.str, str.size+1);
+}
+
 
 #endif // STD_OS_LINUX_H

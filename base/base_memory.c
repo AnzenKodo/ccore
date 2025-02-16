@@ -1,24 +1,7 @@
-#ifndef BASE_MEM_H
-#define BASE_MEM_H
+// ak: Memory Operation Functions
+//====================================================================
 
-fn inline void *mem_set(void *dest, U8 c, ISize n);
-fn inline I32 mem_cmp(void const *s1, void const *s2, ISize size);
-fn inline void *mem_copy(void *dest, void const *source, ISize n);
-fn inline void *mem_move(void *dest, void const *source, ISize n);
-
-#define MemZero(s,z)       mem_set((s),0,(z))
-#define MemZeroStruct(s)   MemZero((s),sizeof(*(s)))
-#define MemZeroArray(a)    MemZero((a),sizeof(a))
-#define MemZeroTyped(m,c)  MemZero((m),sizeof(*(m))*(c))
-
-#define MemMatch(a,b,z)         (mem_cmp((a),(b),(z)) == 0)
-#define MemMatchStruct(a,b)     MemoryMatch((a),(b),sizeof(*(a)))
-#define MemMatchArray(a,b)      MemoryMatch((a),(b),sizeof(a))
-
-#define MemCopy(dst, src, size)    mem_copy((dst), (src), (size))
-#define MemMove(dst, src, size)    mem_move((dst), (src), (size))
-
-fn inline void *mem_set(void *dest, U8 c, ISize n) {
+fn inline void *memory_set(void *dest, U8 c, ISize n) {
     U8 *s = cast(U8 *)dest;
     ISize k;
     U32 c32 = ((U32)-1)/255 * c;
@@ -35,12 +18,12 @@ fn inline void *mem_set(void *dest, U8 c, ISize n) {
     if (n < 7) { return dest; }
     s[3] = s[n-4] = c;
     if (n < 9) { return dest; }
-    
+
     k = -cast(IPtr)s & 3;
     s += k;
     n -= k;
     n &= -4;
-    
+
     *cast(U32 *)(s+0) = c32;
     *cast(U32 *)(s+n-4) = c32;
     if (n < 9) { return dest; }
@@ -61,7 +44,7 @@ fn inline void *mem_set(void *dest, U8 c, ISize n) {
     k = 24 + (cast(UPtr)s & 4);
     s += k;
     n -= k;
-    
+
     {
         U64 c64 = (cast(U64)c32 << 32) | c32;
         while (n > 31) {
@@ -69,24 +52,24 @@ fn inline void *mem_set(void *dest, U8 c, ISize n) {
             *cast(U64 *)(s+8) = c64;
             *cast(U64 *)(s+16) = c64;
             *cast(U64 *)(s+24) = c64;
-    
+
             n -= 32;
             s += 32;
         }
     }
-    
+
     return dest;
 }
 
-fn inline I32 mem_cmp(void const *s1, void const *s2, ISize size)
+fn inline I32 memory_cmp(void const *s1, void const *s2, ISize size)
 {
     U8 const *s1p8 = cast(U8 const *)s1;
     U8 const *s2p8 = cast(U8 const *)s2;
-    
+
     if (s1 == NULL || s2 == NULL) {
         return 0;
     }
-    
+
     while (size--) {
         if (*s1p8 != *s2p8) {
             return (*s1p8 - *s2p8);
@@ -96,7 +79,7 @@ fn inline I32 mem_cmp(void const *s1, void const *s2, ISize size)
     return 0;
 }
 
-fn inline void *mem_copy(void *dest, void const *source, ISize n) 
+fn inline void *memory_copy(void *dest, void const *source, ISize n)
 {
 #if defined(_MSC_VER)
     if (dest == NULL) {
@@ -257,7 +240,7 @@ fn inline void *mem_copy(void *dest, void const *source, ISize n)
     return dest;
 }
 
-fn inline void *mem_move(void *dest, void const *source, ISize n) 
+fn inline void *memory_move(void *dest, void const *source, ISize n)
 {
     U8 *d = cast(U8 *)dest;
     U8 const *s = cast(U8 const *)source;
@@ -270,7 +253,7 @@ fn inline void *mem_move(void *dest, void const *source, ISize n)
         return d;
     }
     if (s+n <= d || d+n <= s) { // NOTE: Non-overlapping
-        return mem_copy(d, s, n);
+        return memory_copy(d, s, n);
     }
 
     if (d < s) {
@@ -304,5 +287,3 @@ fn inline void *mem_move(void *dest, void const *source, ISize n)
 
     return dest;
 }
-
-#endif // BASE_MEM_H

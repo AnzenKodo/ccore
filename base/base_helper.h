@@ -1,22 +1,30 @@
 #ifndef BASE_HELPER_H
 #define BASE_HELPER_H
 
-// C Runtime Include
-//==================
+// External Includes
+//====================================================================
 
 #include <stdint.h>
 #include <errno.h>
 #include <stddef.h>
 
+#ifdef SIMD_SSE
+# include <xmmintrin.h>
+#endif
+
+#ifdef SIMD_NEON
+# include <arm_neon.h>
+#endif
+
 // Code Keywords
-//==============
+//====================================================================
 
 #define fn          static
 #define global      static
 #define local_persist   static
 
 // Inline
-//=======
+//====================================================================
 
 #if defined(_MSC_VER)
     #if _MSC_VER < 1300
@@ -29,7 +37,7 @@
 #endif
 
 // Tread static
-//=============
+//====================================================================
 
 #if COMPILER_MSVC
 #   define thread_static __declspec(thread)
@@ -38,12 +46,13 @@
 #endif
 
 // Singly-Linked, singly-headed lists (stacks)
+//====================================================================
 
 #define SLLStackPush_N(f,n,next) ((n)->next=(f), (f)=(n))
 #define SLLStackPop_N(f,next) ((f)=(f)->next)
 
 // Asserts
-//========
+//====================================================================
 
 #if COMPILER_MSVC
 #   define Trap() __debugbreak()
@@ -64,10 +73,8 @@
 #define NoOp               ((void)0)
 #define StaticAssert(C, ID) global U8 Glue(ID, __LINE__)[(C)?1:-1]
 
-
-
 // Linkage Keyword Macros
-//=======================
+//====================================================================
 
 #if OS_WINDOWS
   #define shared_function C_LINKAGE __declspec(dllexport)
@@ -86,14 +93,14 @@
 #endif
 
 // Build
-//======
+//====================================================================
 
 #if !defined(BUILD_DEBUG)
 #   define BUILD_DEBUG 1
 #endif
 
 // Units
-//======
+//====================================================================
 
 #define KB(n)  (((U64)(n)) << 10)
 #define MB(n)  (((U64)(n)) << 20)
@@ -104,7 +111,7 @@
 #define Billion(n)    ((n)*1000000000)
 
 // Clamps, Mins, Maxes
-//====================
+//====================================================================
 
 #define Min(A,B) (((A)<(B))?(A):(B))
 #define Max(A,B) (((A)>(B))?(A):(B))
@@ -113,7 +120,7 @@
 #define Clamp(A,X,B) (((X)<(A))?(A):((X)>(B))?(B):(X))
 
 // Alignment
-//==========
+//====================================================================
 
 #if COMPILER_MSVC
 #   define AlignOf(T) __alignof(T)
@@ -126,7 +133,7 @@
 #endif
 
 // Address Sanitizer Markup
-//=========================
+//====================================================================
 
 #if COMPILER_MSVC
 #   if defined(__SANITIZE_ADDRESS__)
@@ -158,15 +165,9 @@ C_LINKAGE void __asan_unpoison_memory_region(void const volatile *addr, size_t s
 #endif
 
 // Misc. Macros
-//=============
+//====================================================================
 
 #define cast(Type) (Type)
-
-#if LANG_CPP
-#   define zero_struct {}
-#else
-#   define zero_struct {0}
-#endif
 
 #define Stringify_(S) #S
 #define Stringify(S) Stringify_(S)
@@ -191,7 +192,7 @@ C_LINKAGE void __asan_unpoison_memory_region(void const volatile *addr, size_t s
 #define IsPow2OrZero(x)    ((((x) - 1)&(x)) == 0)
 
 // Base Types
-//===========
+//====================================================================
 
 #if LANG_C
     #define Bool  _Bool
@@ -221,7 +222,7 @@ typedef ptrdiff_t ISize;
     typedef signed   __int64  IPtr;
     typedef unsigned __int64 UPtr;
 #elif defined(_WIN32)
-    // NOTE(bill); To mark types changing their size, e.g. IPtr
+    // NOTE: To mark types changing their size, e.g. IPtr
     #ifndef _W64
         #if !defined(__midl) && (defined(_X86_) || defined(_M_IX86)) && _MSC_VER >= 1300
             #define _W64 __w64
@@ -237,6 +238,9 @@ typedef ptrdiff_t ISize;
     typedef  intptr_t  IPtr;
 #endif
 
+// Define Values
+//====================================================================
+
 #ifndef NULL
     #if defined(__cplusplus)
         #if __cplusplus >= 201103L
@@ -249,8 +253,14 @@ typedef ptrdiff_t ISize;
     #endif
 #endif
 
+#if LANG_CPP
+#   define ZERO_STRUCT {}
+#else
+#   define ZERO_STRUCT {0}
+#endif
+
 // Time
-//=====
+//====================================================================
 
 typedef enum WeekDay {
     WeekDay_sun,
@@ -299,6 +309,5 @@ typedef struct DateTime
     };
     U32 year; // 1 = 1 CE, 0 = 1 BC
 } DateTime;
-
 
 #endif // BASE_HELPER_H

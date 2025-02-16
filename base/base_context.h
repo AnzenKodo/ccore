@@ -2,7 +2,7 @@
 #define BASE_CONTEXT_H
 
 // Clang OS/Arch Chacking
-//=======================
+//====================================================================
 
 #if defined(__clang__)
 
@@ -31,7 +31,7 @@
 #   endif
 
 // MSVC OS/Arch Cracking
-//======================
+//====================================================================
 
 #elif defined(_MSC_VER)
 
@@ -82,7 +82,7 @@
 #endif
 
 // GCC OS/Arch Cracking
-//=====================
+//====================================================================
 
 #elif defined(__GNUC__) || defined(__GNUG__)
 
@@ -108,14 +108,14 @@
 
 
 // Not supported compiler
-//=======================
+//====================================================================
 
 #else
 #   error Compiler not supported.
 #endif
 
 // Arch Cracking
-//==============
+//====================================================================
 
 #if defined(ARCH_X64)
 # define ARCH_64BIT 1
@@ -130,7 +130,7 @@
 #endif
 
 // Language Cracking
-//==================
+//====================================================================
 
 #if defined(__cplusplus)
 #   define LANG_CPP 1
@@ -139,7 +139,7 @@
 #endif
 
 // Zero All Undefined Options
-//===========================
+//====================================================================
 
 #if !defined(ARCH_32BIT)
 #   define ARCH_32BIT 0
@@ -182,6 +182,25 @@
 #endif
 #if !defined(LANG_C)
 #   define LANG_C 0
+#endif
+
+// SIMD
+////==================================================================
+
+#ifdef COMPILER_MSVC /* MSVC supports SSE in amd64 mode or _M_IX86_FP >= 1 (2 means SSE2) */
+#   if defined(ARCH_X64) || ( defined(_M_IX86_FP) && _M_IX86_FP >= 1 )
+#       define SIMD_SSE 1
+#   endif
+#else /* not MSVC, probably GCC, clang, icc or something that doesn't support SSE anyway */
+#   ifdef __SSE__ /* they #define __SSE__ if it's supported */
+#       define SIMD_SSE 1
+#   endif /*  __SSE__ */
+#endif /* not _MSC_VER */
+#ifdef __ARM_NEON
+#   define SIMD_NEON 1
+#endif /* NEON Supported */
+#if !defined(SIMD_SSE) && !defined(SIMD_NEON)
+#	error No SIMD supported
 #endif
 
 #endif // BASE_CONTEXT_H
