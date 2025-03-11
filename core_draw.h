@@ -20,9 +20,9 @@ struct Rgba {
     U8 alpha;
 };
 
-typedef struct Draw_Canvas Draw_Canvas;
-struct Draw_Canvas {
-    void *pixels;
+typedef struct Draw_Buffer Draw_Buffer;
+struct Draw_Buffer {
+    void *memory;
     U32 width;
     U32 height;
     I32 bytes_per_pixel;
@@ -102,10 +102,10 @@ fn U32 draw_rgba_to_hex_argb(const Rgba color)
     return result;
 }
 
-fn Rect draw_center_rect(Draw_Canvas canvas, F32 height, F32 width)
+fn Rect draw_center_rect(Draw_Buffer *buffer, F32 height, F32 width)
 {
-    F32 x = canvas.height/2 - height/2;
-    F32 y = canvas.width/2 - width/2;
+    F32 x = buffer->height/2 - height/2;
+    F32 y = buffer->width/2 - width/2;
     Rect rect = { x, y, height, width };
     return rect;
 }
@@ -113,22 +113,22 @@ fn Rect draw_center_rect(Draw_Canvas canvas, F32 height, F32 width)
 //// Canvas context
 ////==================================================================
 
-fn Draw_Canvas *draw_create_canvas(
+fn Draw_Buffer *draw_create_canvas(
     U16 width, U16 height, I16 bytes_per_pixel
 ) {
     Arena *arena = arena_alloc();
     draw_context = arena_push(arena, Draw_Context, 1);
-    void *pixels = arena_push(arena, U32, (width*height) * bytes_per_pixel);
+    void *memory = arena_push(arena, U32, (width*height) * bytes_per_pixel);
     draw_context->arena = arena;
 
-    Draw_Canvas *canvas = 0;
-    canvas = arena_push(arena, Draw_Canvas, 1);
-    canvas->pixels = pixels;
-    canvas->width = width;
-    canvas->height = height;
-    canvas->bytes_per_pixel = bytes_per_pixel;
-    canvas->pitch = width * bytes_per_pixel;
-    return canvas;
+    Draw_Buffer *buffer = 0;
+    buffer = arena_push(arena, Draw_Buffer, 1);
+    buffer->memory = memory;
+    buffer->width = width;
+    buffer->height = height;
+    buffer->bytes_per_pixel = bytes_per_pixel;
+    buffer->pitch = width * bytes_per_pixel;
+    return buffer;
 }
 
 fn void draw_free_canvas()
@@ -139,38 +139,38 @@ fn void draw_free_canvas()
 //// Shapes
 ////==================================================================
 
-fn void draw_fill_canvas(Draw_Canvas canvas, Rgba color)
+fn void draw_fill(Draw_Buffer *buffer, Rgba color)
 {
-    for (F32 y = 0; y < canvas.height; y++)
+    for (F32 y = 0; y < buffer->height; y++)
     {
-        for (F32 x = 0; x < canvas.width; x++)
+        for (F32 x = 0; x < buffer->width; x++)
         {
-            U32 *pixel = (U32 *)canvas.pixels + cast(U32)(y * canvas.width + x);
+            U32 *pixel = (U32 *)buffer->memory + cast(U32)(y * buffer->width + x);
             *pixel = draw_rgba_to_hex_argb(color);
         }
     }
 }
 
-fn void draw_rect(Draw_Canvas canvas, Rect rect, Rgba color)
+fn void draw_rect(Draw_Buffer *buffer, Rect rect, Rgba color)
 {
     I32 rect_x = round_f32_to_i32(rect.x);
     I32 rect_y = round_f32_to_i32(rect.y);
     I32 width = round_f32_to_i32(rect.width);
     I32 height = round_f32_to_i32(rect.height);
 
-    if (width > (I32)canvas.width) width = canvas.width;
-    if (height > (I32)canvas.height) height = canvas.height;
+    if (width > (I32)buffer->width) width = buffer->width;
+    if (height > (I32)buffer->height) height = buffer->height;
     if (rect_y < 0) rect_y = 0;
     if (rect_x < 0) rect_x = 0;
 
-    U8 *row = ((U8 *)canvas.pixels) + rect_x*canvas.bytes_per_pixel + rect_y*canvas.pitch;
+    U8 *row = ((U8 *)buffer->memory) + rect_x*buffer->bytes_per_pixel + rect_y*buffer->pitch;
     for (I32 y = rect_y; y < height; ++y)
     {
         U32 *pixel = (U32 *)row;
         for (I32 x = rect_x; x < width; ++x) {
             *pixel++ = draw_rgba_to_hex_argb(color);
         }
-        row += canvas.pitch;
+        row += buffer->pitch;
     }
 
     // for (I32 y = 0; y < height; y++)
@@ -179,46 +179,46 @@ fn void draw_rect(Draw_Canvas canvas, Rect rect, Rgba color)
     //     {
     //         I32 dy = y + rect_y;
     //         I32 dx = x + rect_x;
-    //         U32 *pixel = (U32 *)canvas.pixels + dy * canvas.width + dx;
+    //         U32 *pixel = (U32 *)buffer->memory + dy * buffer->width + dx;
     //         *pixel = draw_rgba_to_hex_argb(color);
     //     }
     // }
 }
 
-fn void draw_pixel(Draw_Canvas canvas, I32 x, I32 y, Rgba color) {
-    I32 width = canvas.width;
-    I32 height = canvas.height;
+fn void draw_pixel(Draw_Buffer *buffer, I32 x, I32 y, Rgba color) {
+    I32 width = buffer->width;
+    I32 height = buffer->height;
 
     if (x >= 0 && x < width && y >= 0 && y < height) {
-        U32 *pixel = (U32 *)canvas.pixels + (U32)(y * width + x);
+        U32 *pixel = (U32 *)buffer->memory + (U32)(y * width + x);
         *pixel = draw_rgba_to_hex_argb(color);
     }
 }
 
-fn void draw_circle2(Draw_Canvas canvas, I32 xc, I32 yc, U32 radius, Rgba color) {
+fn void draw_circle2(Draw_Buffer *buffer, I32 xc, I32 yc, U32 radius, Rgba color) {
     I32 r2 = radius * radius;
     for (I32 x = -radius; x <= cast(I32)radius; x++) {
         I32 y = cast(I32)(sqrt_f32(r2 - x*x) + 0.5);
-        draw_pixel(canvas, xc + x, yc + y, color);
-        draw_pixel(canvas, xc + x, yc - y, color);
+        draw_pixel(buffer, xc + x, yc + y, color);
+        draw_pixel(buffer, xc + x, yc - y, color);
     }
 }
 
-void draw_circle(Draw_Canvas canvas, I32 cx, I32 cy, U32 radius, Rgba color) {
+void draw_circle(Draw_Buffer *buffer, I32 cx, I32 cy, U32 radius, Rgba color) {
     int x = radius;
     int y = 0;
     int err = 0;
 
     while (x >= y) {
         // Plot points in all eight octants
-        draw_pixel(canvas, cx + x, cy + y, color);
-        draw_pixel(canvas, cx + y, cy + x, color);
-        draw_pixel(canvas, cx - y, cy + x, color);
-        draw_pixel(canvas, cx - x, cy + y, color);
-        draw_pixel(canvas, cx - x, cy - y, color);
-        draw_pixel(canvas, cx - y, cy - x, color);
-        draw_pixel(canvas, cx + y, cy - x, color);
-        draw_pixel(canvas, cx + x, cy - y, color);
+        draw_pixel(buffer, cx + x, cy + y, color);
+        draw_pixel(buffer, cx + y, cy + x, color);
+        draw_pixel(buffer, cx - y, cy + x, color);
+        draw_pixel(buffer, cx - x, cy + y, color);
+        draw_pixel(buffer, cx - x, cy - y, color);
+        draw_pixel(buffer, cx - y, cy - x, color);
+        draw_pixel(buffer, cx + y, cy - x, color);
+        draw_pixel(buffer, cx + x, cy - y, color);
 
         y += 1;
         err += 1 + 2*y;

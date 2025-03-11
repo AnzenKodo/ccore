@@ -22,7 +22,7 @@ fn void render_set_wl_linux_visual_info(
     XFree(xvisual_info);
 }
 
-fn Draw_Canvas render_init(void)
+fn Draw_Buffer render_init(void)
 {
     Display *display = wl_linux_state->display;
     Window window = wl_linux_state->window;
@@ -36,7 +36,7 @@ fn Draw_Canvas render_init(void)
     render_opengl_state->arena = arena;
     render_opengl_state->context = context;
 
-    Draw_Canvas canvas;
+    Draw_Buffer canvas;
     return canvas;
 }
 

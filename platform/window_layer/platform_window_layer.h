@@ -183,43 +183,49 @@ struct Wl_Event {
     Wl_Key key;
     Vec2F32 pos;
     Wl_EventType type;
-    Vec2F32 win_size;
 };
 typedef struct Wl_Event Wl_Event;
 
 struct Wl_Handle {
     Arena *arena;
     Wl_Event event;
+    Vec2I32 win_size;
     Bool win_close_status;
 };
 typedef struct Wl_Handle Wl_Handle;
 
+// Globals
+//====================================================================
+
+global Wl_Handle *wl_handle = 0;
+
 // Function Define
 //====================================================================
 
-fn Wl_Handle *wl_window_open(Str8 title, Vec2F32 resolution);
-fn void wl_window_close(Wl_Handle *wl_handle);
-fn void wl_wl_begin(Wl_Handle *wl_wl_handle);
+fn void wl_window_open(Str8 title, U32 win_width, U32 win_height);
+fn void wl_window_close(void);
+fn void wl_update_events(void);
 
 // Window close functions
 //====================================================================
 
-fn void wl_set_window_close(Wl_Handle *wl_handle);
-fn Bool wl_should_window_close(Wl_Handle *wl_handle);
+fn void wl_set_window_close(void);
+fn Bool wl_should_window_close(void);
 
 // Event functions
 //====================================================================
 
-fn Wl_Event wl_event_get(void);
-fn Bool wl_is_key_pressed(Wl_Handle *wl_handle, Wl_Key key);
+fn Wl_Event wl_get_event(void);
+fn Bool wl_is_key_pressed(Wl_Key key);
 
 // Get Window Info
 //====================================================================
 
-fn I16 wl_get_display_width(void);
-fn I16 wl_get_display_height(void);
-fn F32 wl_get_window_height(void);
+fn U32 wl_get_display_width(void);
+fn U32 wl_get_display_height(void);
+fn U32 wl_get_window_width(void);
+fn U32 wl_get_window_height(void);
 
-fn void wl_set_window_icon(void);
+fn void wl_set_window_icon(const U8 *icon);
 
 #endif // WINDOW_LAYER_H

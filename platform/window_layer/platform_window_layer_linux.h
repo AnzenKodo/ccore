@@ -7,6 +7,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
+#include <X11/extensions/Xrandr.h>
 
 // Redefine Internal Macros
 //====================================================================
@@ -28,7 +29,6 @@ struct Wl_Linux_State {
     U16 screen;
     Atom wm_delete_window;
     Atom wm_sync_request;
-    Wl_Event event;
     XVisualInfo visual_info;
 };
 

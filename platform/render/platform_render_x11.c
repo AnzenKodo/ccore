@@ -9,7 +9,7 @@ fn void render_set_wl_linux_visual_info(XVisualInfo *visual_info)
     XFree(xvisual_info);
 }
 
-fn Draw_Canvas render_init(void)
+fn Draw_Buffer *render_init(void)
 {
     Display *display = wl_linux_state->display;
     U16 screen = wl_linux_state->screen;
@@ -17,12 +17,12 @@ fn Draw_Canvas render_init(void)
 
     I16 width = wl_get_display_width();
     I16 height = wl_get_display_height();
-    I16 bytes_per_pixel = 4;
-    void *pixels = arena_push_size(arena, (width * height) * bytes_per_pixel, 1);
+    I32 bytes_per_pixel = 4;
+    void *memory = arena_push_size(arena, (width * height) * bytes_per_pixel, 1);
 
     XImage *image = XCreateImage(
         display, DefaultVisual(display, screen),
-        24, ZPixmap, 0, cast(char *)pixels,
+        24, ZPixmap, 0, cast(char *)memory,
         width , height, 32, width * 4
     );
 
@@ -36,14 +36,15 @@ fn Draw_Canvas render_init(void)
     render_x11_state->image = image;
     render_x11_state->gc = gc;
 
-    Draw_Canvas canvas = ZERO_STRUCT;
-    canvas.pixels = cast(U32*)pixels;
-    canvas.width = width;
-    canvas.height = height;
-    canvas.bytes_per_pixel = bytes_per_pixel;
-    canvas.pitch = width * bytes_per_pixel;
+    Draw_Buffer *buffer = 0;
+    buffer = arena_push(arena, Draw_Buffer, 1);
+    buffer->memory = memory;
+    buffer->width = width;
+    buffer->height = height;
+    buffer->bytes_per_pixel = bytes_per_pixel;
+    buffer->pitch = buffer->width * buffer->bytes_per_pixel;
 
-    return canvas;
+    return buffer;
 }
 
 fn void render_close(void)
@@ -55,8 +56,8 @@ fn void render_close(void)
 
 fn void render_begin(void)
 {
-    I16 width = wl_get_window_width();
-    I16 height = wl_get_window_height();
+    U32 width = wl_get_window_width();
+    U32 height = wl_get_window_height();
     XPutImage(
         wl_linux_state->display, wl_linux_state->window,
         render_x11_state->gc, render_x11_state->image,

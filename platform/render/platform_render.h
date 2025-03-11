@@ -1,7 +1,7 @@
 #ifndef RENDER_H
 #define RENDER_H
 
-fn Draw_Canvas render_init(void);
+fn Draw_Buffer *render_init(void);
 fn void render_draw(void);
 fn void render_close(void);
 fn void render_begin(void);
