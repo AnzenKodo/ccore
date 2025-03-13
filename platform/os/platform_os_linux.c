@@ -161,4 +161,44 @@ fn void os_write_str8(I32 fd, Str8 str)
 }
 
 
+// Time
+//====================================================================
+
+fn DateTime os_linux_date_time_from_tm(struct tm in, U32 msec)
+{
+  DateTime dt = {0};
+  dt.sec  = in.tm_sec;
+  dt.min  = in.tm_min;
+  dt.hour = in.tm_hour;
+  dt.day  = in.tm_mday-1;
+  dt.mon  = in.tm_mon;
+  dt.year = in.tm_year+1900;
+  dt.msec = msec;
+  return dt;
+}
+
+fn U64 os_now_ms(void)
+{
+  struct timespec t;
+  clock_gettime(CLOCK_MONOTONIC, &t);
+  U64 result = t.tv_sec*Million(1) + (t.tv_nsec/Thousand(1));
+  return result;
+}
+
+fn U32 os_now_unix(void)
+{
+  time_t t = time(0);
+  return (U32)t;
+}
+
+fn DateTime os_now_universal_time(void)
+{
+  time_t t = 0;
+  time(&t);
+  struct tm universal_tm = {0};
+  gmtime_r(&t, &universal_tm);
+  DateTime result = os_linux_date_time_from_tm(universal_tm, 0);
+  return result;
+}
+
 #endif // STD_OS_LINUX_H

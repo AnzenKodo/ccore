@@ -7,7 +7,7 @@ thread_static TCTX* tctx_thread_local = 0;
 #endif
 
 fn void tctx_init_and_equip(TCTX *tctx){
-    MemoryZeroStruct(tctx);
+    MemZeroStruct(tctx);
     Arena **arena_ptr = tctx->arenas;
     for (U64 i = 0; i < ArrayCount(tctx->arenas); i += 1, arena_ptr += 1){
         *arena_ptr = arena_alloc();
@@ -53,7 +53,7 @@ fn Arena* tctx_get_scratch(Arena **conflicts, U64 count){
 fn void tctx_set_thread_name(Str8 string){
     TCTX *tctx = tctx_get_equipped();
     U64 size = ClampTop(string.size, sizeof(tctx->thread_name));
-    MemoryMove(tctx->thread_name, string.str, size);
+    MemMove(tctx->thread_name, string.str, size);
     tctx->thread_name_size = size;
 }
 

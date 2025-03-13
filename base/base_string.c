@@ -57,7 +57,7 @@ fn Bool str8_match(Str8 a, Str8 b, StrMatchFlags flags)
     Bool result = 0;
     if(a.size == b.size && flags == 0)
     {
-        result = MemoryMatch(a.str, b.str, b.size);
+        result = MemMatch(a.str, b.str, b.size);
     }
     else if(a.size == b.size || (flags & StrMatchFlag_RightSideSloppy))
     {

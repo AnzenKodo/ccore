@@ -59,7 +59,7 @@ global U64 arena_default_commit_size  = KB(64);
 #endif
 
 #define arena_push_no_zero_aligned(a, Type, c, align) cast(Type *)arena_push_size((a), sizeof(Type)*(c), (align))
-#define arena_push_aligned(a, Type, c, align) cast(Type *)MemoryZero(arena_push_no_zero_aligned(a, Type, c, align), sizeof(Type)*(c))
+#define arena_push_aligned(a, Type, c, align) cast(Type *)MemZero(arena_push_no_zero_aligned(a, Type, c, align), sizeof(Type)*(c))
 #define arena_push_no_zero(a, Type, c) arena_push_no_zero_aligned(a, Type, c, Max(8, AlignOf(Type)))
 #define arena_push(a, Type, c) arena_push_aligned(a, Type, c, Max(8, AlignOf(Type)))
 
