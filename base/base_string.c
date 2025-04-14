@@ -8,9 +8,9 @@ fn U64 cstr32_len(U32 *c) { U32 *p = c; for (;*p != 0; p += 1); return(p - c); }
 // Character Classification & Conversion Functions
 //====================================================================
 
-fn Bool char_is_slash(U8 c)         { return(c == '/' || c == '\\'); }
-fn Bool char_is_upper(U8 c)         { return('A' <= c && c <= 'Z'); }
-fn Bool char_is_lower(U8 c)         { return('a' <= c && c <= 'z'); }
+fn bool char_is_slash(U8 c)         { return(c == '/' || c == '\\'); }
+fn bool char_is_upper(U8 c)         { return('A' <= c && c <= 'Z'); }
+fn bool char_is_lower(U8 c)         { return('a' <= c && c <= 'z'); }
 fn U8 char_to_lower(U8 c)           { if (char_is_upper(c)) { c += ('a' - 'A'); } return(c); }
 fn U8 char_to_upper(U8 c)           { if (char_is_lower(c)) { c += ('A' - 'a'); } return(c); }
 fn U8 char_to_correct_slash(U8 c)   { if(char_is_slash(c)) { c = '/'; } return(c); }
@@ -52,9 +52,9 @@ fn Str8 str8_postfix(Str8 str, U64 size)
 // String Matching
 //====================================================================
 
-fn Bool str8_match(Str8 a, Str8 b, StrMatchFlags flags)
+fn bool str8_match(Str8 a, Str8 b, StrMatchFlags flags)
 {
-    Bool result = 0;
+    bool result = 0;
     if(a.size == b.size && flags == 0)
     {
         result = MemMatch(a.str, b.str, b.size);
@@ -120,9 +120,9 @@ fn U64 str8_find_needle(Str8 string, U64 start_pos, Str8 needle, StrMatchFlags f
     return(result);
 }
 
-fn Bool str8_ends_with(Str8 string, Str8 end, StrMatchFlags flags)
+fn bool str8_ends_with(Str8 string, Str8 end, StrMatchFlags flags)
 {
     Str8 postfix = str8_postfix(string, end.size);
-    Bool is_match = str8_match(end, postfix, flags);
+    bool is_match = str8_match(end, postfix, flags);
     return is_match;
 }

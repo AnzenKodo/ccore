@@ -5,14 +5,24 @@ fn U32 round_f32_to_u32(F32 a) { U32 result = (U32)(a + 0.5f); return result; }
 //// Scalar Ops
 ////==================================================================
 
-fn F32 sqrt_f32(float number)
+fn F32 round_f32(F32 x) { return (F32)((x >= 0.0f) ? floor_f32(x + 0.5f) : ceil_f32(x - 0.5f)); }
+fn F32 floor_f32(F32 x) { return (F32)((x >= 0.0f) ? (int)x : (int)(x-0.9999999999999999f)); }
+fn F32 ceil_f32(F32 x)  { return (F32)((x < 0) ? (int)x : ((int)x)+1); }
+
+fn F32 sqrt_f32(F32 number)
 {
-    float Result;
+    F32 Result;
 
 #ifdef SIMD_SSE
-    __m128 In = _mm_set_ss(number);
-    __m128 Out = _mm_sqrt_ss(In);
-    Result = _mm_cvtss_f32(Out);
+    #ifdef COMPILER_TCC
+        simde__m128 In = simde_mm_set_ss(number);
+        simde__m128 Out = simde_mm_sqrt_ss(In);
+        Result = simde_mm_cvtss_f32(Out);
+    #else
+        __m128 In = _mm_set_ss(number);
+        __m128 Out = _mm_sqrt_ss(In);
+        Result = _mm_cvtss_f32(Out);
+    #endif
 #elif defined(SIMD_NEON)
     float32x4_t In = vdupq_n_f32(number);
     float32x4_t Out = vsqrtq_f32(In);

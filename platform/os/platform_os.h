@@ -43,8 +43,8 @@ fn Os_File os_file_open(Str8 path, Os_AccessFlags flags);
 fn void os_file_close(Os_File fd);
 fn U64 os_file_read(Os_File fd, Rng1U64 rng, void *out_data);
 fn U64 os_file_write(Os_File fd, Rng1U64 rng, void *data);
-fn Bool os_dir_make(const char *path);
-fn Bool os_exist(const char *path);
+fn bool os_dir_make(const char *path);
+fn bool os_exist(const char *path);
 
 // Exit
 //====================================================================

@@ -374,6 +374,10 @@ fn U32 round_f32_to_u32(F32 a);
 #define degrees_from_radians_f32(v) (degrees_from_turns_f32(turns_from_radians_f32(v)))
 #define radians_from_degrees_f32(v) (radians_from_turns_f32(turns_from_degrees_f32(v)))
 
+fn F32 round_f32(F32 x);
+fn F32 floor_f32(F32 x);
+fn F32 ceil_f32(F32 x);
+
 fn F32 sqrt_f32(F32 number);
 fn F32 cos_f32(F32 a);
 fn F32 sin_f32(F32 a);

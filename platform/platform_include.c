@@ -2,7 +2,7 @@
 //====================================================================
 
 #if OS_LINUX
-#   include "ccore/platform/os/platform_os_linux.c"
+#   include "os/platform_os_linux.c"
 #else
 #   error OS layer not implemented for this operating system.
 #endif
@@ -13,7 +13,7 @@
 //====================================================================
 
 #   if OS_LINUX
-#      include "ccore/platform/window_layer/platform_window_layer_linux.c"
+#      include "window_layer/platform_window_layer_linux.c"
 #   else
 #      error OS window layer not implemented for this operating system.
 #   endif
@@ -22,9 +22,9 @@
 //====================================================================
 
 #   if RENDER_BACKEND == RENDER_BACKEND_X11
-#      include "ccore/platform/render/platform_render_x11.c"
+#      include "render/platform_render_x11.c"
 #   elif RENDER_BACKEND == RENDER_BACKEND_OPENGL
-#      include "ccore/platform/render/platform_render_opengl.c"
+#      include "render/platform_render_opengl.c"
 #   endif
 
 #endif

@@ -7,7 +7,7 @@
 #include "ccore/base/base_include.c"
 #include "ccore/platform/platform_include.c"
 
-void test_check(Bool value, const char *fmt, ...)
+void test_check(bool value, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -59,7 +59,7 @@ void test_wl(void)
 
     fmt_printf("Display Width: %d\n", wl_get_display_width());
     fmt_printf("Display Height: %d\n", wl_get_display_height());
-    
+
     Draw_Buffer *buffer = render_init();
     U32 i = 0;
     while (!wl_should_window_close()) {

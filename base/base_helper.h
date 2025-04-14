@@ -9,7 +9,11 @@
 #include <stddef.h>
 
 #ifdef SIMD_SSE
-# include <xmmintrin.h>
+#   ifdef COMPILER_TCC
+#       include "../external/simde/x86/sse.h"
+#   else
+#       include <xmmintrin.h>
+#   endif
 #endif
 
 #ifdef SIMD_NEON
@@ -41,7 +45,7 @@
 
 #if COMPILER_MSVC
 #   define thread_static __declspec(thread)
-#elif COMPILER_CLANG || COMPILER_GCC
+#elif COMPILER_CLANG || COMPILER_GCC || COMPILER_TCC
 #   define thread_static __thread
 #endif
 
@@ -58,6 +62,8 @@
 #   define Trap() __debugbreak()
 #elif COMPILER_CLANG || COMPILER_GCC
 #   define Trap() __builtin_trap()
+#elif COMPILER_TCC
+#   define Trap() asm volatile("ud2");
 #else
 #   error Unknown trap intrinsic for this compiler.
 #endif
@@ -126,7 +132,7 @@
 #   define AlignOf(T) __alignof(T)
 #elif COMPILER_CLANG
 #   define AlignOf(T) __alignof(T)
-#elif COMPILER_GCC
+#elif COMPILER_GCC || COMPILER_TCC
 #   define AlignOf(T) __alignof__(T)
 #else
 #   error AlignOf not defined for this compiler.
@@ -195,9 +201,7 @@ C_LINKAGE void __asan_unpoison_memory_region(void const volatile *addr, size_t s
 //====================================================================
 
 #if LANG_C
-    #define Bool  _Bool
-#else
-    #define Bool  bool
+    #define bool  _Bool
 #endif
 
 #define true  1

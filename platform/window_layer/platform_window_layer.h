@@ -190,7 +190,7 @@ struct Wl_Handle {
     Arena *arena;
     Wl_Event event;
     Vec2I32 win_size;
-    Bool win_close_status;
+    bool win_close_status;
 };
 typedef struct Wl_Handle Wl_Handle;
 
@@ -210,13 +210,13 @@ fn void wl_update_events(void);
 //====================================================================
 
 fn void wl_set_window_close(void);
-fn Bool wl_should_window_close(void);
+fn bool wl_should_window_close(void);
 
 // Event functions
 //====================================================================
 
 fn Wl_Event wl_get_event(void);
-fn Bool wl_is_key_pressed(Wl_Key key);
+fn bool wl_is_key_pressed(Wl_Key key);
 
 // Get Window Info
 //====================================================================

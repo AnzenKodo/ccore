@@ -117,7 +117,7 @@ fn U64 os_file_write(Os_File fd, Rng1U64 rng, void *data)
     return total_num_bytes_written;
 }
 
-fn Bool os_dir_make(const char *path)
+fn bool os_dir_make(const char *path)
 {
     I32 result = mkdir(path, 0700);
 
@@ -128,7 +128,7 @@ fn Bool os_dir_make(const char *path)
     }
 }
 
-fn Bool os_exist(const char *path)
+fn bool os_exist(const char *path)
 {
     struct stat buffer;
 

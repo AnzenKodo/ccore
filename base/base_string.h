@@ -43,9 +43,9 @@ fn U64 cstr32_len(U32 *c);
 // Character Classification & Conversion Functions
 //====================================================================
 
-fn Bool char_is_slash(U8 c);
-fn Bool char_is_upper(U8 c);
-fn Bool char_is_lower(U8 c);
+fn bool char_is_slash(U8 c);
+fn bool char_is_upper(U8 c);
+fn bool char_is_lower(U8 c);
 fn U8 char_to_lower(U8 c);
 fn U8 char_to_upper(U8 c);
 fn U8 char_to_correct_slash(U8 c);
@@ -73,8 +73,8 @@ fn Str8 str8_postfix(Str8 str, U64 size);
 // String Matching
 //====================================================================
 
-fn Bool str8_match(Str8 a, Str8 b, StrMatchFlags flags);
+fn bool str8_match(Str8 a, Str8 b, StrMatchFlags flags);
 fn U64 str8_find_needle(Str8 string, U64 start_pos, Str8 needle, StrMatchFlags flags);
-fn Bool str8_ends_with(Str8 string, Str8 end, StrMatchFlags flags);
+fn bool str8_ends_with(Str8 string, Str8 end, StrMatchFlags flags);
 
 #endif // BASE_STRING_H

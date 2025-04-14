@@ -106,6 +106,32 @@
 #       error Architecture not supported.
 #   endif
 
+// TCC OS/Arch Checking
+//====================================================================
+
+#elif defined(__TINYC__)
+
+#   define COMPILER_TCC 1
+
+#   if defined(__linux__)
+#       define OS_LINUX 1
+#   elif defined(__windows__)
+#       define OS_WINDOWS 1
+#   else
+#       error This OS is not supported by TCC.
+#   endif
+
+#   if defined(__x86_64__)
+#       define ARCH_X64 1
+#   elif defined(__i386__)
+#       define ARCH_X86 1
+#   elif defined(__aarch64__)
+#       define ARCH_ARM64 1
+#   elif defined(__arm__)
+#       define ARCH_ARM32 1
+#   else
+#       error Architecture not supported by TCC.
+#   endif
 
 // Not supported compiler
 //====================================================================
