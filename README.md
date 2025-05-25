@@ -14,6 +14,8 @@ link <obj_path> <libs_path> -DEBUG -OUT:<output_path> $protection -logo
 
 - [Writing a C Compiler](https://norasandler.com/book/)
 - [Beej's Guide to Network Programming](https://beej.us/guide/bgnet/)
+- [codin](https://github.com/graphitemaster/codin/tree/main/src)
+- [fs](https://github.com/mackron/fs) - Cross platform system file system lib.
 
 ## Helpful Links
 

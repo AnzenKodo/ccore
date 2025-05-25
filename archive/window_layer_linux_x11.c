@@ -1,32 +1,22 @@
 // Basic Window functions
 //=============================================================================
 
-fn void wl_window_open(Str8 title, U32 win_width, U32 win_height)
+internal void wl_window_open(Str8 title, U32 win_width, U32 win_height)
 {
-    Arena *arena = arena_alloc();
-    wl_handle = arena_push(arena, Wl_Handle, 1);
-    wl_handle->arena = arena;
-    wl_handle->win_close_status = false;
+    Display *display = XOpenDisplay(NULL);
 
-    wl_linux_state = arena_push(arena, Wl_Linux_State, 1);
-    wl_linux_state->display = XOpenDisplay(NULL);
-    wl_linux_state->screen = DefaultScreen(wl_linux_state->display);
-
-    // Xlib get window property
+    // Visula Info ============================================================
     XVisualInfo visual_info = ZERO_STRUCT;
-    render_set_wl_linux_visual_info(&visual_info);
-    // TODO:=============
-    // wl_linux_state->visual_info = visual_info;
-    //===================
+    render_set_wl_linux_visual_info(&visual_info, display);
 
-    XSetWindowAttributes set_window_attributes;
-    set_window_attributes.colormap = XCreateColormap(
-        wl_linux_state->display,
-        RootWindow(wl_linux_state->display, visual_info.screen),
+    // Window Attributes ======================================================
+    XSetWindowAttributes window_attributes;
+    window_attributes.colormap = XCreateColormap(
+        display,
+        RootWindow(display, visual_info.screen),
         visual_info.visual, AllocNone
     );
-
-	set_window_attributes.event_mask =
+	window_attributes.event_mask =
 	    ExposureMask|
 	    PointerMotionMask|
         ButtonPressMask|
@@ -36,78 +26,68 @@ fn void wl_window_open(Str8 title, U32 win_width, U32 win_height)
         FocusChangeMask|
         StructureNotifyMask;
 
-    wl_linux_state->window = XCreateWindow(
-        wl_linux_state->display,
-        RootWindow(wl_linux_state->display, visual_info.screen),
+    // Window =================================================================
+    Window window = window = XCreateWindow(
+        display,
+        RootWindow(display, visual_info.screen),
         0, 0, win_width, win_height, 0,
         visual_info.depth, InputOutput, visual_info.visual,
-        CWColormap|CWEventMask, &set_window_attributes
+        CWColormap|CWEventMask, &window_attributes
     );
+    XMapWindow(display, window);
 
-    // Map the window to the screen
-    XMapWindow(wl_linux_state->display, wl_linux_state->window);
-    XSync(wl_linux_state->display, false);
+    // Window Properties ======================================================
+    Atom wm_delete_window = XInternAtom(display, "WM_DELETE_WINDOW", false);
+    Atom wm_sync_request = XInternAtom(display, "_NET_WM_SYNC_REQUEST", false);
+    Atom protocols[] = { wm_delete_window, wm_sync_request };
+    XSetWMProtocols(display, window, protocols, ArrayCount(protocols));
 
-    // Tell the window manager we want to handle the delete window message
-    wl_linux_state->wm_delete_window = XInternAtom(
-        wl_linux_state->display, "WM_DELETE_WINDOW", false
-    );
-    wl_linux_state->wm_sync_request = XInternAtom(
-        wl_linux_state->display, "_NET_WM_SYNC_REQUEST", false
-    );
-    Atom protocols[] = {
-        wl_linux_state->wm_delete_window, wl_linux_state->wm_sync_request
-    };
-    XSetWMProtocols(
-        wl_linux_state->display, wl_linux_state->window,
-        protocols, ArrayCount(protocols)
-    );
+    // Window Name ============================================================
+    XStoreName(display, window, cast(const char *)title.str);
 
-    // Set window title
-    XStoreName(wl_linux_state->display, wl_linux_state->window,
-        cast(const char *)title.str
-    );
+    // Window Layer State =====================================================
+    wl_linux_state.display = display;
+    wl_linux_state.window = window;
+    wl_linux_state.wm_delete_window = wm_delete_window;
+    wl_linux_state.wm_sync_request = wm_sync_request;
 }
 
-fn void wl_window_close(void)
+internal void wl_window_close(void)
 {
-    XDestroyWindow(wl_linux_state->display, wl_linux_state->window);
-    XCloseDisplay(wl_linux_state->display);
-    arena_free(wl_handle->arena);
+    XDestroyWindow(wl_linux_state.display, wl_linux_state.window);
+    XCloseDisplay(wl_linux_state.display);
 }
 
-fn void wl_update_events(void)
+// Window Close Functions
+//=============================================================================
+
+internal void wl_set_window_close(void)
 {
-    XFlush(wl_linux_state->display);
-    Wl_Event event = wl_get_event();
-    wl_handle->event = event;
-    if (wl_handle->event.type == Wl_EventType_WindowClose) {
+    wl_state.win_should_close = true;
+}
+
+internal bool wl_should_window_close(void)
+{
+    return wl_state.win_should_close;
+}
+
+// Event Functions
+//=============================================================================
+
+internal void wl_update_events(void)
+{
+    wl_state.event = wl_get_event();
+    if (wl_state.event.type == Wl_EventType_WindowClose) {
         wl_set_window_close();
     }
 }
 
-// Window close helper functions
-//=============================================================================
-
-fn void wl_set_window_close(void)
+internal Wl_Event wl_get_event(void)
 {
-    wl_handle->win_close_status = true;
-}
-
-fn Bool wl_should_window_close(void)
-{
-    return wl_handle->win_close_status;
-}
-
-// Event functions
-//=============================================================================
-
-fn Wl_Event wl_get_event(void)
-{
-    Display *display = wl_linux_state->display;
-
     Wl_Event event = ZERO_STRUCT;
-    while (XPending(display)) {
+    Display *display = wl_linux_state.display;
+
+    while (XPending(display) > 0) {
         XEvent xevent = ZERO_STRUCT;
         XNextEvent(display, &xevent);
 
@@ -197,7 +177,7 @@ fn Wl_Event wl_get_event(void)
                 event.key = key;
             }break;
 
-            // Mouse button presses/releases
+            // Mouse button presses/releases ==================================
             case ButtonPress:
             case ButtonRelease:
             {
@@ -222,6 +202,7 @@ fn Wl_Event wl_get_event(void)
                     case Button2:{key = Wl_Key_MiddleMouseButton;}break;
                     case Button3:{key = Wl_Key_RightMouseButton;}break;
                 }
+
                 if (xevent.type == ButtonPress) {
                     event.type = Wl_EventType_Press;
                 } else {
@@ -231,7 +212,7 @@ fn Wl_Event wl_get_event(void)
                 event.key = key;
             }break;
 
-            // Mouse Motion
+            // Mouse Motion ===================================================
             case MotionNotify:
             {
                 event.type = Wl_EventType_MouseMove;
@@ -239,28 +220,30 @@ fn Wl_Event wl_get_event(void)
                 event.pos.y = (F32)xevent.xmotion.y;
             }break;
 
-            //- rjf: window focus/unfocus
+            // Window focus/unfocus ===========================================
             case FocusIn: break;
             case FocusOut:
             {
                 event.type = Wl_EventType_WindowLoseFocus;
             }break;
 
-            // Client messages
+            // Client messages ================================================
             case ClientMessage:
             {
-                if((Atom)xevent.xclient.data.l[0] == wl_linux_state->wm_delete_window)
+                if((Atom)xevent.xclient.data.l[0] == wl_linux_state.wm_delete_window)
                 {
                     event.type = Wl_EventType_WindowClose;
                 }
-                else if((Atom)xevent.xclient.data.l[0] == wl_linux_state->wm_sync_request)
+                else if((Atom)xevent.xclient.data.l[0] == wl_linux_state.wm_sync_request)
                 {
                 }
             }break;
+
+            // Window Resize ==================================================
             case ConfigureNotify:
             {
-                wl_handle->win_size.x = xevent.xconfigure.width;
-                wl_handle->win_size.y = xevent.xconfigure.height;
+                wl_state.win_size.x = xevent.xconfigure.width;
+                wl_state.win_size.y = xevent.xconfigure.height;
                 event.type = Wl_EventType_WindowResize;
             }break;
         } // Switch
@@ -269,67 +252,30 @@ fn Wl_Event wl_get_event(void)
     return event;
 }
 
-fn Bool wl_is_key_pressed(Wl_Key key)
+internal bool wl_is_key_pressed(Wl_Key key)
 {
-    return wl_handle->event.key == key;
+    return wl_state.event.key == key;
 }
 
-// Get Window Info
+// Get Window Information
 //=============================================================================
 
-fn U32 wl_get_display_width(void)
+internal U32 wl_get_display_width(void)
 {
-    return DisplayWidth(wl_linux_state->display, wl_linux_state->screen);
+    return DisplayWidth(wl_linux_state.display, XDefaultScreen(wl_linux_state.display));
 }
 
-fn U32 wl_get_display_height(void)
+internal U32 wl_get_display_height(void)
 {
-    return DisplayHeight(wl_linux_state->display, wl_linux_state->screen);
+    return DisplayHeight(wl_linux_state.display, XDefaultScreen(wl_linux_state.display));
 }
 
-fn U32 wl_get_window_width(void)
+internal U32 wl_get_window_width(void)
 {
-   return (U32)wl_handle->win_size.x;
+   return (U32)wl_state.win_size.x;
 }
 
-fn U32 wl_get_window_height(void)
+internal U32 wl_get_window_height(void)
 {
-    return (U32)wl_handle->win_size.y;
-}
-
-fn F32 wl_get_monitor_refresh_rate(void)
-{
-    F32 result = 0;
-    XRRScreenResources *screen_res = XRRGetScreenResources(
-        wl_linux_state->display, DefaultRootWindow(wl_linux_state->display)
-    );
-
-        XRRCrtcInfo *crtc_info = XRRGetCrtcInfo(
-            wl_linux_state->display, screen_res, screen_res->crtcs[0]
-        );
-        if (crtc_info) {
-            if (cast(F32)crtc_info->mode != 0) {
-                F32 dot_clock = cast(F32)screen_res->modes[crtc_info->mode].dotClock;
-                F32 h_pixels = screen_res->modes[crtc_info->mode].hTotal;
-                F32 v_pixels = screen_res->modes[crtc_info->mode].vTotal;
-                result = dot_clock / (h_pixels * v_pixels);
-            }
-            XRRFreeCrtcInfo(crtc_info);
-        }
-
-    XRRFreeScreenResources(screen_res);
-    return result;
-}
-
-
-// Set Window Info
-//=============================================================================
-
-fn void wl_set_window_icon(const U8 *icon)
-{
-    Atom wm_icon = XInternAtom(wl_linux_state->display, "_NET_WM_ICON", False);
-    XChangeProperty(
-        wl_linux_state->display, wl_linux_state->window, wm_icon,
-        XA_CARDINAL, 32, PropModeReplace,
-        icon, sizeof(*icon) / sizeof(long));
+    return (U32)wl_state.win_size.y;
 }
