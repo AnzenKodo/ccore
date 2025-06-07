@@ -1,3 +1,5 @@
+// By Mārtiņš Možeiko
+// Source: https://gist.github.com/mmozeiko/56db3df14ab380152d6875383d0f4afd
 // floor function for floats with SSE1 or SSE2
 
 #include <emmintrin.h>

@@ -2,13 +2,13 @@
 #define BASE_CORE_H
 
 // External Includes
-//====================================================================
+//=============================================================================
 
 #include <stdint.h>
-#include <stddef.h>
+// #include <stddef.h>
 
 // Base Types
-//====================================================================
+//=============================================================================
 
 #if LANG_C
     #define bool _Bool
@@ -29,16 +29,14 @@ typedef float    F32;
 typedef double   F64;
 
 // Code Keywords
-//====================================================================
+//=============================================================================
 
-#define fn              static
+#define internal        static
 #define global          static
 #define local_persist   static
 
 // Constants
-//====================================================================
-
-global F32 pi_f32  = 3.1415926535897f;
+//=============================================================================
 
 global U64 max_u64 = 0xffffffffffffffffull;
 global U32 max_u32 = 0xffffffff;
@@ -55,16 +53,8 @@ global I32 min_i32 = (I32)0xffffffff;
 global I16 min_i16 = (I16)0xffff;
 global I8  min_i8  =  (I8)0xff;
 
-// Units
-//====================================================================
-
-#define KB(n)  (((U64)(n)) << 10)
-#define MB(n)  (((U64)(n)) << 20)
-#define GB(n)  (((U64)(n)) << 30)
-#define TB(n)  (((U64)(n)) << 40)
-
 // Misc. Macros
-//====================================================================
+//=============================================================================
 
 #define cast(Type)    (Type)
 #define ArrayCount(a) (sizeof(a) / sizeof((a)[0]))
@@ -92,7 +82,7 @@ global I8  min_i8  =  (I8)0xff;
 #endif
 
 // Alignment
-//====================================================================
+//=============================================================================
 
 #if COMPILER_MSVC
 # define AlignOf(T) __alignof(T)
@@ -105,7 +95,7 @@ global I8  min_i8  =  (I8)0xff;
 #endif
 
 // Asserts
-//====================================================================
+//=============================================================================
 
 #if COMPILER_MSVC
 #   define Trap() __debugbreak()
@@ -124,5 +114,11 @@ global I8  min_i8  =  (I8)0xff;
 #   define Assert(x) (void)(x)
 #endif
 #define NotImplemented     Assert(!"Not Implemented!")
+
+// Functions
+//=============================================================================
+
+internal I32 round_f32_to_i32(F32 a) { I32 result = (I32)(a + 0.5f); return result; }
+internal U32 round_f32_to_u32(F32 a) { U32 result = (U32)(a + 0.5f); return result; }
 
 #endif // BASE_CORE_H

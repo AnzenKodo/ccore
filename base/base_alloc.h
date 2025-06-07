@@ -25,8 +25,8 @@ typedef struct {
 
 #define alloc_arena_init(b, s) (Alloc){alloc_arena_push, alloc_arena_pop, &(Arena){.buffer = b, .size = s}}
 
-fn void *alloc_arena_push(void *context, U64 size, U64 align);
-fn void alloc_arena_pop(void *context, void *buffer, U64 size);
-fn void alloc_arena_reset(void *context);
+internal void *alloc_arena_push(void *context, U64 size, U64 align);
+internal void alloc_arena_pop(void *context, void *buffer, U64 size);
+internal void alloc_arena_reset(void *context);
 
 #endif // BASE_ALLOC_H

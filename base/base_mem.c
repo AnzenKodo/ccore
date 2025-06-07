@@ -1,4 +1,4 @@
-fn inline bool mem_match(void const *s1, void const *s2, I64 size)
+internal inline bool mem_match(void const *s1, void const *s2, I64 size)
 {
     bool result = false;
     U8 const *s1p8 = cast(U8 const *)s1;
@@ -21,7 +21,7 @@ fn inline bool mem_match(void const *s1, void const *s2, I64 size)
     return result;
 }
 
-fn inline void *mem_copy(void *dest, void const *source, I64 n)
+internal inline void *mem_copy(void *dest, void const *source, I64 n)
 {
 #if COMPILER_MSVC
     if (dest == NULL) {
@@ -182,7 +182,7 @@ fn inline void *mem_copy(void *dest, void const *source, I64 n)
     return dest;
 }
 
-fn inline void *mem_move(void *dest, void const *source, I64 n)
+internal inline void *mem_move(void *dest, void const *source, I64 n)
 {
     U8 *d = cast(U8 *)dest;
     U8 const *s = cast(U8 const *)source;
@@ -230,7 +230,7 @@ fn inline void *mem_move(void *dest, void const *source, I64 n)
     return dest;
 }
 
-fn inline void *mem_set(void *dest, U8 c, I64 n)
+internal inline void *mem_set(void *dest, U8 c, I64 n)
 {
     U8 *s = cast(U8 *)dest;
     I64 k;

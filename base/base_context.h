@@ -1,6 +1,15 @@
 #ifndef BASE_CONTEXT_H
 #define BASE_CONTEXT_H
 
+// Language Cracking
+//====================================================================
+
+#if defined(__cplusplus)
+#   define LANG_CPP 1
+#else
+#   define LANG_C 1
+#endif
+
 // Clang OS/Arch Chacking
 //====================================================================
 
@@ -75,12 +84,6 @@
 #       error Architecture not supported.
 #   endif
 
-#if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || defined(__x86_64__)
-	#ifndef CPU_X86
-		#define CPU_X86 1
-	#endif
-#endif
-
 // GCC OS/Arch Cracking
 //====================================================================
 
@@ -150,83 +153,9 @@
 #endif
 
 #if ARCH_ARM32 || ARCH_ARM64 || ARCH_X64 || ARCH_X86
-#   define ARCH_LITTLE_ENDIAN 1
+# define ARCH_LITTLE_ENDIAN 1
 #else
-#   error Endianness of this architecture not understood by context cracker.
-#endif
-
-// Language Cracking
-//====================================================================
-
-#if defined(__cplusplus)
-#   define LANG_CPP 1
-#else
-#   define LANG_C 1
-#endif
-
-// Zero All Undefined Options
-//====================================================================
-
-#if !defined(ARCH_32BIT)
-#   define ARCH_32BIT 0
-#endif
-#if !defined(ARCH_64BIT)
-#   define ARCH_64BIT 0
-#endif
-#if !defined(ARCH_X64)
-#   define ARCH_X64 0
-#endif
-#if !defined(ARCH_X86)
-#   define ARCH_X86 0
-#endif
-#if !defined(ARCH_ARM64)
-#   define ARCH_ARM64 0
-#endif
-#if !defined(ARCH_ARM32)
-#   define ARCH_ARM32 0
-#endif
-#if !defined(COMPILER_MSVC)
-#   define COMPILER_MSVC 0
-#endif
-#if !defined(COMPILER_GCC)
-#   define COMPILER_GCC 0
-#endif
-#if !defined(COMPILER_CLANG)
-#   define COMPILER_CLANG 0
-#endif
-#if !defined(OS_WINDOWS)
-#   define OS_WINDOWS 0
-#endif
-#if !defined(OS_LINUX)
-#   define OS_LINUX 0
-#endif
-#if !defined(OS_MAC)
-#   define OS_MAC 0
-#endif
-#if !defined(LANG_CPP)
-#   define LANG_CPP 0
-#endif
-#if !defined(LANG_C)
-#   define LANG_C 0
-#endif
-
-// SIMD
-////==================================================================
-
-#ifdef COMPILER_MSVC /* MSVC supports SSE in amd64 mode or _M_IX86_FP >= 1 (2 means SSE2) */
-#   if defined(ARCH_X64) || ( defined(_M_IX86_FP) && _M_IX86_FP >= 1 )
-#       define SIMD_SSE 1
-#   endif
-#else /* not MSVC, probably GCC, clang, icc or something that doesn't support SSE anyway */
-#   ifdef __SSE__ /* they #define __SSE__ if it's supported */
-#       define SIMD_SSE 1
-#   endif /*  __SSE__ */
-#endif /* not _MSC_VER */
-#ifdef __ARM_NEON
-#   define SIMD_NEON 1
-#endif /* NEON Supported */
-#if !defined(SIMD_SSE) && !defined(SIMD_NEON)
-#	error No SIMD supported
+# error Endianness of this architecture not understood by context cracker.
 #endif
 
 #endif // BASE_CONTEXT_H

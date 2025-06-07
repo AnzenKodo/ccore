@@ -1,34 +1,36 @@
-#ifndef WINDOW_LAYER_H
-#define WINDOW_LAYER_H
+#ifndef WINDOW_LAYER_CORE_H
+#define WINDOW_LAYER_CORE_H
 
 // Types
-//====================================================================
+//=============================================================================
 
+typedef enum Wl_EventType Wl_EventType;
 enum Wl_EventType
 {
-  Wl_EventType_Null,
-  Wl_EventType_Press,
-  Wl_EventType_Release,
-  Wl_EventType_MouseMove,
-  Wl_EventType_Text,
-  Wl_EventType_Scroll,
-  Wl_EventType_WindowLoseFocus,
-  Wl_EventType_WindowClose,
-  Wl_EventType_WindowResize,
-  Wl_EventType_FileDrop,
-  Wl_EventType_Wakeup,
-  Wl_EventType_COUNT
+    Wl_EventType_Null,
+    Wl_EventType_Press,
+    Wl_EventType_Release,
+    Wl_EventType_MouseMove,
+    Wl_EventType_Text,
+    Wl_EventType_Scroll,
+    Wl_EventType_WindowLoseFocus,
+    Wl_EventType_WindowClose,
+    Wl_EventType_WindowResize,
+    Wl_EventType_FileDrop,
+    Wl_EventType_Wakeup,
+    Wl_EventType_COUNT
 };
-typedef enum Wl_EventType Wl_EventType;
 
+typedef enum Wl_ModKey Wl_ModKey;
 enum Wl_ModKey
 {
     Wl_ModKey_Ctrl  = (1<<0),
     Wl_ModKey_Shift = (1<<1),
     Wl_ModKey_Alt   = (1<<2),
+    Wl_ModKey_Super = (1<<3),
 };
-typedef enum Wl_ModKey Wl_ModKey;
 
+typedef enum Wl_Key Wl_Key;
 enum Wl_Key
 {
     Wl_Key_Null,
@@ -98,7 +100,8 @@ enum Wl_Key
     Wl_Key_Semicolon,
     Wl_Key_Quote,
     Wl_Key_Return,
-    Wl_Key_Shift,
+    Wl_Key_ShiftLeft,
+    Wl_Key_ShiftRight,
     Wl_Key_Z,
     Wl_Key_X,
     Wl_Key_C,
@@ -109,10 +112,15 @@ enum Wl_Key
     Wl_Key_Comma,
     Wl_Key_Period,
     Wl_Key_Slash,
-    Wl_Key_Ctrl,
-    Wl_Key_Alt,
+    Wl_Key_CtrlLeft,
+    Wl_Key_CtrlRight,
+    Wl_Key_AltLeft,
+    Wl_Key_AltRight,
     Wl_Key_Space,
     Wl_Key_Menu,
+    Wl_Key_SuperLeft,
+    Wl_Key_SuperRight,
+    Wl_Key_Print,
     Wl_Key_ScrollLock,
     Wl_Key_Pause,
     Wl_Key_Insert,
@@ -161,6 +169,7 @@ enum Wl_Key
     Wl_Key_NumMinus,
     Wl_Key_NumPlus,
     Wl_Key_NumPeriod,
+    Wl_Key_NumReturn,
     Wl_Key_Num0,
     Wl_Key_Num1,
     Wl_Key_Num2,
@@ -176,56 +185,62 @@ enum Wl_Key
     Wl_Key_RightMouseButton,
     Wl_Key_COUNT,
 };
-typedef enum Wl_Key Wl_Key;
 
+
+typedef struct Wl_Event Wl_Event;
 struct Wl_Event {
     Wl_ModKey mod_key;
     Wl_Key key;
     Vec2F32 pos;
     Wl_EventType type;
 };
-typedef struct Wl_Event Wl_Event;
 
-struct Wl_Handle {
-    Arena *arena;
+typedef struct Wl_State Wl_State;
+struct Wl_State {
     Wl_Event event;
     Vec2I32 win_size;
-    bool win_close_status;
+    Vec2I32 display_size;
+    bool win_should_close;
+    U64 frame_prev_time;
+    U64 frame_count;
+    U32 fps;
 };
-typedef struct Wl_Handle Wl_Handle;
 
-// Globals
-//====================================================================
+// Basic Window functions
+//=============================================================================
 
-global Wl_Handle *wl_handle = 0;
+internal void wl_window_open(Str8 title, Vec2I32 win_size);
+internal void wl_window_close(void);
 
-// Function Define
-//====================================================================
+// Window Close Functions
+//=============================================================================
 
-fn void wl_window_open(Str8 title, U32 win_width, U32 win_height);
-fn void wl_window_close(void);
-fn void wl_update_events(void);
+internal void wl_set_window_close(void);
+internal bool wl_should_window_close(void);
 
-// Window close functions
-//====================================================================
+// Event Functions
+//=============================================================================
 
-fn void wl_set_window_close(void);
-fn bool wl_should_window_close(void);
+internal void wl_update_events();
+internal Wl_Event wl_get_event(void);
+internal bool wl_is_key_pressed(Wl_Key key);
 
-// Event functions
-//====================================================================
+// Get Window Information
+//=============================================================================
 
-fn Wl_Event wl_get_event(void);
-fn bool wl_is_key_pressed(Wl_Key key);
+internal U32 wl_get_display_width(void);
+internal U32 wl_get_display_height(void);
+internal U32 wl_get_window_width(void);
+internal U32 wl_get_window_height(void);
 
-// Get Window Info
-//====================================================================
+// Window Icon
+//=============================================================================
 
-fn U32 wl_get_display_width(void);
-fn U32 wl_get_display_height(void);
-fn U32 wl_get_window_width(void);
-fn U32 wl_get_window_height(void);
+internal void wl_window_icon_set(U32 *icon_data, U32 width, U32 height);
 
-fn void wl_set_window_icon(const U8 *icon);
+// Global Variables
+//=============================================================================
 
-#endif // WINDOW_LAYER_H
+global Wl_State wl_state = ZERO_STRUCT;
+
+#endif // WINDOW_LAYER_CORE_H
